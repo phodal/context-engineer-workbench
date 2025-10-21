@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { UIMessage } from 'ai';
 import type { APIMetrics } from '@/lib/metrics';
+import { formatDuration } from '@/lib/metrics';
 
 interface TraceStep {
   step: string;
@@ -70,11 +71,11 @@ export default function EvaluationPanel({ trace, metrics }: EvaluationPanelProps
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white rounded p-2 border border-purple-100">
               <div className="text-xs text-purple-600 font-medium">First Token Latency</div>
-              <div className="text-lg font-bold text-purple-900">{metrics.firstTokenLatency}ms</div>
+              <div className="text-lg font-bold text-purple-900">{formatDuration(metrics.firstTokenLatency)}</div>
             </div>
             <div className="bg-white rounded p-2 border border-purple-100">
-              <div className="text-xs text-purple-600 font-medium">Total Latency</div>
-              <div className="text-lg font-bold text-purple-900">{metrics.totalLatency}ms</div>
+              <div className="text-xs text-purple-600 font-medium">Total Time</div>
+              <div className="text-lg font-bold text-purple-900">{formatDuration(metrics.totalLatency)}</div>
             </div>
             <div className="bg-white rounded p-2 border border-purple-100">
               <div className="text-xs text-purple-600 font-medium">Throughput</div>
@@ -82,7 +83,7 @@ export default function EvaluationPanel({ trace, metrics }: EvaluationPanelProps
             </div>
             <div className="bg-white rounded p-2 border border-purple-100">
               <div className="text-xs text-purple-600 font-medium">Avg Latency/Token</div>
-              <div className="text-lg font-bold text-purple-900">{metrics.averageLatencyPerToken.toFixed(2)}ms</div>
+              <div className="text-lg font-bold text-purple-900">{formatDuration(metrics.averageLatencyPerToken)}</div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3">

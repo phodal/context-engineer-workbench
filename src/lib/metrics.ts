@@ -92,17 +92,35 @@ export function finalizeMetrics(collector: MetricsCollector): APIMetrics {
 }
 
 /**
+ * Format time duration for display
+ * Converts milliseconds to appropriate unit (ms, s, etc.)
+ * For durations > 10s, displays in seconds instead of milliseconds
+ */
+export function formatDuration(ms: number): string {
+  if (ms < 10000) {
+    // For durations less than 10 seconds, show in milliseconds
+    return `${Math.round(ms)}ms`;
+  }
+  const seconds = ms / 1000;
+  if (seconds < 60) {
+    return `${seconds.toFixed(2)}s`;
+  }
+  const minutes = seconds / 60;
+  return `${minutes.toFixed(2)}m`;
+}
+
+/**
  * Format metrics for display
  */
 export function formatMetrics(metrics: APIMetrics): Record<string, string> {
   return {
-    'First Token Latency': `${metrics.firstTokenLatency}ms`,
-    'Total Latency': `${metrics.totalLatency}ms`,
+    'First Token Latency': formatDuration(metrics.firstTokenLatency),
+    'Total Latency': formatDuration(metrics.totalLatency),
     'Input Tokens': metrics.inputTokens.toString(),
     'Output Tokens': metrics.outputTokens.toString(),
     'Total Tokens': metrics.totalTokens.toString(),
     'Throughput': `${metrics.tokensPerSecond.toFixed(2)} tokens/s`,
-    'Avg Latency/Token': `${metrics.averageLatencyPerToken.toFixed(2)}ms`,
+    'Avg Latency/Token': formatDuration(metrics.averageLatencyPerToken),
   };
 }
 

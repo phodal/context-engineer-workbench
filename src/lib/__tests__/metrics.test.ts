@@ -110,14 +110,14 @@ describe('Metrics Module', () => {
       };
       
       const formatted = formatMetrics(metrics);
-      
+
       expect(formatted['First Token Latency']).toBe('150ms');
       expect(formatted['Total Latency']).toBe('1000ms');
       expect(formatted['Input Tokens']).toBe('100');
       expect(formatted['Output Tokens']).toBe('50');
       expect(formatted['Total Tokens']).toBe('150');
       expect(formatted['Throughput']).toBe('50.00 tokens/s');
-      expect(formatted['Avg Latency/Token']).toBe('20.00ms');
+      expect(formatted['Avg Latency/Token']).toBe('20ms');
     });
   });
 

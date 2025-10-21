@@ -71,6 +71,7 @@ export default function Workbench() {
   const requestStartTimeRef = useRef<number | null>(null);
   const firstTokenTimeRef = useRef<number | null>(null);
   const lastMessageCountRef = useRef<number>(0);
+  const userInputRef = useRef<string>(''); // Store user input for token counting
 
   // Manual input state management for AI SDK 5.0
   const [input, setInput] = useState('');
@@ -90,6 +91,9 @@ export default function Workbench() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Store user input for token counting
+    userInputRef.current = input;
 
     // Record the start time and reset first token time
     requestStartTimeRef.current = Date.now();
@@ -132,26 +136,33 @@ export default function Workbench() {
         const lastMessage = messages[messages.length - 1];
         const metadata = lastMessage.metadata as Record<string, unknown> | undefined;
 
-        // Try to get real token counts from metadata, fallback to estimation
+        // Get real token counts from API metadata (DeepSeek returns prompt_tokens, completion_tokens)
         let inputTokens = 0;
         let outputTokens = 0;
         let totalTokens = 0;
 
         if (metadata?.usage && typeof metadata.usage === 'object') {
           const usage = metadata.usage as Record<string, unknown>;
+          // DeepSeek API returns inputTokens (prompt_tokens) and outputTokens (completion_tokens)
           inputTokens = typeof usage.inputTokens === 'number' ? usage.inputTokens : 0;
           outputTokens = typeof usage.outputTokens === 'number' ? usage.outputTokens : 0;
           totalTokens = typeof usage.totalTokens === 'number' ? usage.totalTokens : (inputTokens + outputTokens);
         } else {
-          // Fallback: estimate from text length
+          // Fallback: estimate from text length (only if API doesn't return real data)
           outputTokens = lastMessage.parts?.reduce((sum, part) => {
             if (part.type === 'text') {
               return sum + Math.ceil(part.text.length / 4);
             }
             return sum;
           }, 0) || 0;
-          inputTokens = Math.ceil(input.length / 4);
+          inputTokens = Math.ceil(userInputRef.current.length / 4);
           totalTokens = inputTokens + outputTokens;
+        }
+
+        // Ensure inputTokens is never 0 - user always sends something
+        // If we got 0 from API (shouldn't happen), estimate from user input
+        if (inputTokens === 0 && userInputRef.current.length > 0) {
+          inputTokens = Math.max(1, Math.ceil(userInputRef.current.length / 4));
         }
 
         setMetrics({
