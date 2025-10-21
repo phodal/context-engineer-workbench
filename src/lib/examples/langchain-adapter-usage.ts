@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * LangChain.js 适配器使用示例
  * 展示如何将我们的 Tool 和 Retriever 适配为 LangChain 组件

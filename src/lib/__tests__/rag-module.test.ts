@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-assign-module-variable */
 /**
  * RAG 模块测试
  */
+/* eslint-disable @next/next/no-assign-module-variable */
 
 import { RAGModule, createRAGModule } from '../rag/rag-module';
 import { DocumentChunk } from '../rag/bm25-retriever';

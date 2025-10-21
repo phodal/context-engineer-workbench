@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-assign-module-variable */
 import { BM25RetrieverAdapter } from "../retriever-to-langchain";
 import { BM25Retriever } from "../../rag/bm25-retriever";
 import { Document } from "@langchain/core/documents";
@@ -15,17 +14,17 @@ describe("BM25RetrieverAdapter", () => {
       {
         id: "doc1",
         content: "TypeScript is a programming language",
-        metadata: { source: "test" },
+        metadata: { source: "test", chunkIndex: 0 },
       },
       {
         id: "doc2",
         content: "JavaScript runs in the browser",
-        metadata: { source: "test" },
+        metadata: { source: "test", chunkIndex: 1 },
       },
       {
         id: "doc3",
         content: "Python is used for data science",
-        metadata: { source: "test" },
+        metadata: { source: "test", chunkIndex: 2 },
       },
     ]);
 

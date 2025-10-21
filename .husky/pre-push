@@ -1,0 +1,31 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-push checks..."
+
+# Run lint
+echo "📝 Checking lint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Please fix the issues before pushing."
+  exit 1
+fi
+
+# Run build
+echo "🔨 Building..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed. Please fix the issues before pushing."
+  exit 1
+fi
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix the issues before pushing."
+  exit 1
+fi
+
+echo "✅ All checks passed! Pushing..."
+

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-assign-module-variable */
 import { ToolToLangChainAdapter } from "../tool-to-langchain";
 import { KeywordSearchTool } from "../../tools/keyword-search-tool";
 import { RAGModule } from "../../rag/rag-module";

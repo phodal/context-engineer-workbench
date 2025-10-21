@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseRetriever } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 import { BM25Retriever } from "../rag/bm25-retriever";

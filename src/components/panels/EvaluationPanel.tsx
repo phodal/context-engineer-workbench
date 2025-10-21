@@ -15,7 +15,7 @@ interface EvaluationPanelProps {
   trace: TraceStep[];
 }
 
-export default function EvaluationPanel({ messages, trace }: EvaluationPanelProps) {
+export default function EvaluationPanel({ trace }: EvaluationPanelProps) {
   const [viewMode, setViewMode] = useState<'trace' | 'comparison'>('trace');
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 
