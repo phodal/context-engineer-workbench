@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 import Header from './layout/Header';
 import ConfigPanel from './panels/ConfigPanel';
 import ContextAssemblyView from './panels/ContextAssemblyView';
 import InteractionPanel from './panels/InteractionPanel';
 import EvaluationPanel from './panels/EvaluationPanel';
+import type { APIMetrics } from '@/lib/metrics';
 
 interface WorkbenchConfig {
   model: string;
@@ -64,6 +65,13 @@ export default function Workbench() {
     details: Record<string, unknown>;
   }>>([]);
 
+  const [metrics, setMetrics] = useState<APIMetrics | null>(null);
+
+  // Refs to track timing for metrics
+  const requestStartTimeRef = useRef<number | null>(null);
+  const firstTokenTimeRef = useRef<number | null>(null);
+  const lastMessageCountRef = useRef<number>(0);
+
   // Manual input state management for AI SDK 5.0
   const [input, setInput] = useState('');
 
@@ -78,10 +86,15 @@ export default function Workbench() {
     setInput(e.target.value);
   };
 
-  // Manual submit handler
+  // Manual submit handler with metrics collection
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Record the start time and reset first token time
+    requestStartTimeRef.current = Date.now();
+    firstTokenTimeRef.current = null;
+    lastMessageCountRef.current = messages.length;
 
     // Send message using AI SDK 5.0 - use CreateUIMessage format
     sendMessage({
@@ -92,8 +105,75 @@ export default function Workbench() {
         config: config
       }
     });
+
     setInput(''); // Clear input after sending
   };
+
+  // Monitor messages to calculate metrics when response arrives
+  useEffect(() => {
+    if (
+      requestStartTimeRef.current &&
+      messages.length > lastMessageCountRef.current &&
+      messages[messages.length - 1].role === 'assistant'
+    ) {
+      // Record first token time on first message part
+      if (!firstTokenTimeRef.current) {
+        firstTokenTimeRef.current = Date.now();
+      }
+
+      // Only calculate metrics when streaming is complete (status is not 'streaming')
+      if (status !== 'streaming') {
+        const endTime = Date.now();
+        const startTime = requestStartTimeRef.current;
+        const totalTime = endTime - startTime;
+        const firstTokenLatency = firstTokenTimeRef.current ? firstTokenTimeRef.current - startTime : totalTime;
+
+        // Extract token counts from the last message metadata
+        const lastMessage = messages[messages.length - 1];
+        const metadata = lastMessage.metadata as Record<string, unknown> | undefined;
+
+        // Try to get real token counts from metadata, fallback to estimation
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let totalTokens = 0;
+
+        if (metadata?.usage && typeof metadata.usage === 'object') {
+          const usage = metadata.usage as Record<string, unknown>;
+          inputTokens = typeof usage.inputTokens === 'number' ? usage.inputTokens : 0;
+          outputTokens = typeof usage.outputTokens === 'number' ? usage.outputTokens : 0;
+          totalTokens = typeof usage.totalTokens === 'number' ? usage.totalTokens : (inputTokens + outputTokens);
+        } else {
+          // Fallback: estimate from text length
+          outputTokens = lastMessage.parts?.reduce((sum, part) => {
+            if (part.type === 'text') {
+              return sum + Math.ceil(part.text.length / 4);
+            }
+            return sum;
+          }, 0) || 0;
+          inputTokens = Math.ceil(input.length / 4);
+          totalTokens = inputTokens + outputTokens;
+        }
+
+        setMetrics({
+          firstTokenLatency,
+          totalLatency: totalTime,
+          inputTokens,
+          outputTokens,
+          totalTokens,
+          tokensPerSecond: outputTokens > 0 ? (outputTokens / (totalTime / 1000)) : 0,
+          averageLatencyPerToken: outputTokens > 0 ? totalTime / outputTokens : 0,
+          timestamp: startTime,
+          model: config.model,
+          provider: config.provider,
+        });
+
+        // Reset refs
+        requestStartTimeRef.current = null;
+        firstTokenTimeRef.current = null;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, status]);
 
   const updateConfig = (updates: Partial<WorkbenchConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
@@ -169,6 +249,7 @@ export default function Workbench() {
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           <EvaluationPanel messages={messages}
             trace={trace}
+            metrics={metrics}
           />
         </div>
       </div>

@@ -34,14 +34,39 @@ export async function POST(req: Request) {
     // Convert UIMessages to ModelMessages
     const modelMessages = convertToModelMessages(messages);
 
+    // Store usage data from onFinish callback
+    let usageData: Record<string, unknown> | null = null;
+
     const result = streamText({
       model: deepseek(config?.model || 'deepseek-chat'),
       messages: modelMessages,
       temperature: config?.temperature || 0.7,
       system: systemPrompt,
+      onFinish: async (event) => {
+        // Capture real token usage from the API response
+        usageData = {
+          inputTokens: event.usage.inputTokens,
+          outputTokens: event.usage.outputTokens,
+          totalTokens: event.usage.totalTokens,
+        };
+        console.log('API Response Metrics:', usageData);
+      },
     });
 
-    return result.toUIMessageStreamResponse();
+    // Convert to UI message stream with metrics in metadata
+    const response = result.toUIMessageStreamResponse({
+      messageMetadata: ({ part }) => {
+        if (part.type === 'finish-step' && usageData) {
+          // Include real usage metrics from the API in the finish event
+          return {
+            usage: usageData,
+          };
+        }
+        return undefined;
+      },
+    });
+
+    return response;
   } catch (error) {
     console.error('Chat API Error:', error);
     return new Response(

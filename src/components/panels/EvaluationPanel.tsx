@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { UIMessage } from 'ai';
+import type { APIMetrics } from '@/lib/metrics';
 
 interface TraceStep {
   step: string;
@@ -13,9 +14,10 @@ interface TraceStep {
 interface EvaluationPanelProps {
   messages: UIMessage[];
   trace: TraceStep[];
+  metrics?: APIMetrics | null;
 }
 
-export default function EvaluationPanel({ trace }: EvaluationPanelProps) {
+export default function EvaluationPanel({ trace, metrics }: EvaluationPanelProps) {
   const [viewMode, setViewMode] = useState<'trace' | 'comparison'>('trace');
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 
@@ -61,21 +63,62 @@ export default function EvaluationPanel({ trace }: EvaluationPanelProps) {
         </div>
       </div>
 
+      {/* API Performance Metrics - Always Display */}
+      {metrics && (
+        <div className="mb-6 p-4 bg-linear-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">API Performance Metrics</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">First Token Latency</div>
+              <div className="text-lg font-bold text-purple-900">{metrics.firstTokenLatency}ms</div>
+            </div>
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Total Latency</div>
+              <div className="text-lg font-bold text-purple-900">{metrics.totalLatency}ms</div>
+            </div>
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Throughput</div>
+              <div className="text-lg font-bold text-purple-900">{metrics.tokensPerSecond.toFixed(2)} tok/s</div>
+            </div>
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Avg Latency/Token</div>
+              <div className="text-lg font-bold text-purple-900">{metrics.averageLatencyPerToken.toFixed(2)}ms</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Input Tokens</div>
+              <div className="text-sm font-bold text-purple-900">{metrics.inputTokens}</div>
+            </div>
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Output Tokens</div>
+              <div className="text-sm font-bold text-purple-900">{metrics.outputTokens}</div>
+            </div>
+            <div className="bg-white rounded p-2 border border-purple-100">
+              <div className="text-xs text-purple-600 font-medium">Total Tokens</div>
+              <div className="text-sm font-bold text-purple-900">{metrics.totalTokens}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trace Performance Metrics - Fallback */}
+      {trace.length > 0 && !metrics && (
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="text-xs text-blue-600 font-medium">Total Latency</div>
+            <div className="text-lg font-bold text-blue-900">{totalLatency}ms</div>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="text-xs text-green-600 font-medium">Total Tokens</div>
+            <div className="text-lg font-bold text-green-900">{totalTokens}</div>
+          </div>
+        </div>
+      )}
+
       {viewMode === 'trace' ? (
         <>
-          {/* Performance Metrics */}
-          {trace.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="text-xs text-blue-600 font-medium">Total Latency</div>
-                <div className="text-lg font-bold text-blue-900">{totalLatency}ms</div>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="text-xs text-green-600 font-medium">Total Tokens</div>
-                <div className="text-lg font-bold text-green-900">{totalTokens}</div>
-              </div>
-            </div>
-          )}
+
 
           {/* Trace Viewer */}
           <div className="border-t pt-4">
