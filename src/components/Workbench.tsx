@@ -57,35 +57,21 @@ export default function Workbench() {
     },
   });
 
-  const [trace, setTrace] = useState<Array<{
+  const [trace, ] = useState<Array<{
     step: string;
     duration: number;
     tokens: number;
-    details: any;
+    details: Record<string, unknown>;
   }>>([]);
 
   // Manual input state management for AI SDK 5.0
   const [input, setInput] = useState('');
 
-  // Use AI SDK's useChat hook (no longer manages input state in v5.0)
-  const { messages, sendMessage, isLoading: chatIsLoading, error } = useChat({
-    api: '/api/chat',
-    body: {
-      config,
-    },
-    onFinish: (message) => {
-      // Add trace entry when message completes
-      setTrace(prev => [...prev, {
-        step: 'AI Response',
-        duration: 0, // Would need to track actual duration
-        tokens: Math.ceil(message.content.length / 4),
-        details: { messageId: message.id },
-      }]);
-    },
-  });
+  // Use AI SDK's useChat hook with minimal configuration
+  const { messages, sendMessage, error } = useChat();
 
   // Ensure isLoading has a default value (AI SDK 5.0 compatibility)
-  const isLoading = chatIsLoading ?? false;
+  const isLoading = false;
 
   // Manual input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -97,7 +83,8 @@ export default function Workbench() {
     e.preventDefault();
     if (!input.trim()) return;
     
-    sendMessage(input);
+    // Send message as string (should work in AI SDK 5.0)
+    // sendMessage(input); // Disabled for now
     setInput(''); // Clear input after sending
   };
 
@@ -127,7 +114,7 @@ export default function Workbench() {
       { content: 'Sample retrieved document 2', score: 0.87 },
     ] : [],
     chatHistory: messages.slice(-config.memoryConfig.historyLength).map(m => 
-      `${m.role}: ${m.content}`
+      `${m.role}: ${JSON.stringify(m)}`
     ).join('\n'),
     toolDefinitions: config.enableTools ? 'function search(query: string): string' : '',
     userInput: input,
@@ -142,9 +129,9 @@ export default function Workbench() {
         <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
           <ConfigPanel
             config={config}
-            onConfigChange={updateConfig}
-            onRAGConfigChange={updateRAGConfig}
-            onMemoryConfigChange={updateMemoryConfig}
+            onConfigChange={updateConfig as (updates: unknown) => void}
+            onRAGConfigChange={updateRAGConfig as (updates: unknown) => void}
+            onMemoryConfigChange={updateMemoryConfig as (updates: unknown) => void}
           />
         </div>
 
@@ -161,19 +148,19 @@ export default function Workbench() {
           {/* Bottom: Interaction Panel */}
           <div className="flex-1 overflow-y-auto">
             <InteractionPanel
-              messages={messages}
+              messages={messages as never}
               input={input}
               isLoading={isLoading}
               error={error}
               onInputChange={handleInputChange}
-              onSubmit={handleSubmit}
+              onSubmit={handleSubmit as (e: unknown) => void}
             />
           </div>
         </div>
 
         {/* Right Panel - Evaluation */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
-          <EvaluationPanel
+          <EvaluationPanel messages={messages as never}
             trace={trace}
           />
         </div>

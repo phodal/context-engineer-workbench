@@ -12,7 +12,7 @@ interface TraceStep {
   step: string;
   duration: number;
   tokens: number;
-  details: any;
+  details: unknown;
 }
 
 interface EvaluationPanelProps {
@@ -20,7 +20,7 @@ interface EvaluationPanelProps {
   trace: TraceStep[];
 }
 
-export default function EvaluationPanel({ messages, trace }: EvaluationPanelProps) {
+export default function EvaluationPanel({  trace }: EvaluationPanelProps) {
   const [viewMode, setViewMode] = useState<'trace' | 'comparison'>('trace');
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 
@@ -139,7 +139,7 @@ export default function EvaluationPanel({ messages, trace }: EvaluationPanelProp
                               <span className="font-medium text-gray-900">{step.tokens}</span>
                             </div>
                           )}
-                          {Object.keys(step.details).length > 0 && (
+                          {Object.keys(step.details as Record<string, unknown>).length > 0 && (
                             <div className="mt-2 pt-2 border-t border-gray-200">
                               <div className="text-gray-600 mb-1">Details:</div>
                               <pre className="text-xs bg-white p-2 rounded border border-gray-200 overflow-x-auto">

@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       model: deepseek(config?.model || 'deepseek-chat'),
       messages: allMessages,
       temperature: config?.temperature || 0.7,
-      maxTokens: config?.maxTokens || 1000,
+      
     });
 
     return result.toUIMessageStreamResponse();

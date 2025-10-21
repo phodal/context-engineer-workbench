@@ -23,9 +23,9 @@ interface ConfigPanelProps {
       historyLength: number;
     };
   };
-  onConfigChange: (updates: any) => void;
-  onRAGConfigChange: (updates: any) => void;
-  onMemoryConfigChange: (updates: any) => void;
+  onConfigChange: (updates: unknown) => void;
+  onRAGConfigChange: (updates: unknown) => void;
+  onMemoryConfigChange: (updates: unknown) => void;
 }
 
 export default function ConfigPanel({ config, onConfigChange, onRAGConfigChange, onMemoryConfigChange }: ConfigPanelProps) {
