@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { encode } from 'gpt-tokenizer';
 
 interface ContextAssemblyViewProps {
   context: {
@@ -20,7 +21,13 @@ interface ContextAssemblyViewProps {
 export default function ContextAssemblyView({ context, config }: ContextAssemblyViewProps) {
   const estimateTokens = (text: string | undefined) => {
     if (!text) return 0;
-    return Math.ceil(text.length / 4);
+    try {
+      return encode(text).length;
+    } catch (error) {
+      // Fallback to rough estimation if encoding fails
+      console.warn('Token encoding failed, using fallback estimation:', error);
+      return Math.ceil(text.length / 4);
+    }
   };
 
   const totalTokens = 
