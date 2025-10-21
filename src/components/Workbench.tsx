@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useChat } from '@ai-sdk/react';
 import Header from './layout/Header';
 import ConfigPanel from './panels/ConfigPanel';
 import ContextAssemblyView from './panels/ContextAssemblyView';
 import InteractionPanel from './panels/InteractionPanel';
 import EvaluationPanel from './panels/EvaluationPanel';
 
-interface WorkbenchState {
+interface WorkbenchConfig {
   model: string;
   provider: string;
   temperature: number;
@@ -29,26 +30,12 @@ interface WorkbenchState {
     historyLength: number;
     enableUserProfile: boolean;
   };
-  messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }>;
-  context: {
-    systemPrompt: string;
-    retrievedDocs: Array<{ content: string; score: number }>;
-    chatHistory: string;
-    toolDefinitions: string;
-    userInput: string;
-  };
-  trace: Array<{
-    step: string;
-    duration: number;
-    tokens: number;
-    details: any;
-  }>;
 }
 
 export default function Workbench() {
-  const [state, setState] = useState<WorkbenchState>({
-    model: 'gpt-4o',
-    provider: 'OpenAI',
+  const [config, setConfig] = useState<WorkbenchConfig>({
+    model: 'deepseek-chat',
+    provider: 'DeepSeek',
     temperature: 0.7,
     maxTokens: 2000,
     streamResponses: true,
@@ -68,92 +55,126 @@ export default function Workbench() {
       historyLength: 10,
       enableUserProfile: false,
     },
-    messages: [],
-    context: {
-      systemPrompt: 'You are a helpful AI assistant specialized in context engineering.',
-      retrievedDocs: [],
-      chatHistory: '',
-      toolDefinitions: '',
-      userInput: '',
-    },
-    trace: [],
   });
 
-  const handleConfigChange = (config: Partial<WorkbenchState>) => {
-    setState((prev) => ({ ...prev, ...config }));
+  const [trace, setTrace] = useState<Array<{
+    step: string;
+    duration: number;
+    tokens: number;
+    details: any;
+  }>>([]);
+
+  // Manual input state management for AI SDK 5.0
+  const [input, setInput] = useState('');
+
+  // Use AI SDK's useChat hook (no longer manages input state in v5.0)
+  const { messages, sendMessage, isLoading: chatIsLoading, error } = useChat({
+    api: '/api/chat',
+    body: {
+      config,
+    },
+    onFinish: (message) => {
+      // Add trace entry when message completes
+      setTrace(prev => [...prev, {
+        step: 'AI Response',
+        duration: 0, // Would need to track actual duration
+        tokens: Math.ceil(message.content.length / 4),
+        details: { messageId: message.id },
+      }]);
+    },
+  });
+
+  // Ensure isLoading has a default value (AI SDK 5.0 compatibility)
+  const isLoading = chatIsLoading ?? false;
+
+  // Manual input change handler
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
   };
 
-  const handleSendMessage = (message: string) => {
-    const timestamp = new Date();
-    const newMessages = [
-      ...state.messages,
-      { role: 'user' as const, content: message, timestamp },
-    ];
+  // Manual submit handler
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
     
-    const trace = [
-      { step: 'Query Embedding', duration: 45, tokens: 0, details: {} },
-      { step: 'Vector Search', duration: 120, tokens: 0, details: { results: 3 } },
-      { step: 'Context Assembly', duration: 30, tokens: 1250, details: {} },
-      { step: 'LLM Generation', duration: 850, tokens: 450, details: {} },
-      { step: 'Response Parsing', duration: 15, tokens: 0, details: {} },
-    ];
+    sendMessage(input);
+    setInput(''); // Clear input after sending
+  };
 
-    setState((prev) => ({
+  const updateConfig = (updates: Partial<WorkbenchConfig>) => {
+    setConfig(prev => ({ ...prev, ...updates }));
+  };
+
+  const updateRAGConfig = (updates: Partial<WorkbenchConfig['ragConfig']>) => {
+    setConfig(prev => ({
       ...prev,
-      messages: newMessages,
-      context: {
-        ...prev.context,
-        userInput: message,
-        chatHistory: newMessages.slice(-prev.memoryConfig.historyLength).map(m => `${m.role}: ${m.content}`).join('\n'),
-      },
-      trace,
+      ragConfig: { ...prev.ragConfig, ...updates },
     }));
+  };
 
-    setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        messages: [
-          ...newMessages,
-          {
-            role: 'assistant' as const,
-            content: 'This is a simulated response demonstrating the context engineering workbench.',
-            timestamp: new Date(),
-          },
-        ],
-      }));
-    }, 500);
+  const updateMemoryConfig = (updates: Partial<WorkbenchConfig['memoryConfig']>) => {
+    setConfig(prev => ({
+      ...prev,
+      memoryConfig: { ...prev.memoryConfig, ...updates },
+    }));
+  };
+
+  // Build context for visualization
+  const context = {
+    systemPrompt: 'You are a helpful AI assistant specialized in context engineering.',
+    retrievedDocs: config.enableRAG ? [
+      { content: 'Sample retrieved document 1', score: 0.95 },
+      { content: 'Sample retrieved document 2', score: 0.87 },
+    ] : [],
+    chatHistory: messages.slice(-config.memoryConfig.historyLength).map(m => 
+      `${m.role}: ${m.content}`
+    ).join('\n'),
+    toolDefinitions: config.enableTools ? 'function search(query: string): string' : '',
+    userInput: input,
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50">
       <Header />
-
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-80 border-r border-gray-200 bg-white overflow-y-auto">
-          <ConfigPanel state={state} onConfigChange={handleConfigChange} />
+      
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Config Center */}
+        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+          <ConfigPanel
+            config={config}
+            onConfigChange={updateConfig}
+            onRAGConfigChange={updateRAGConfig}
+            onMemoryConfigChange={updateMemoryConfig}
+          />
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="h-1/2 border-b border-gray-200 bg-white overflow-y-auto">
-            <ContextAssemblyView 
-              context={state.context} 
-              maxTokens={state.maxTokens}
-              model={state.model}
+        {/* Middle Panel - Split vertically */}
+        <div className="flex-1 flex flex-col">
+          {/* Top: Context Assembly View */}
+          <div className="flex-1 border-b border-gray-200 overflow-y-auto">
+            <ContextAssemblyView
+              context={context}
+              config={config}
             />
           </div>
 
-          <div className="h-1/2 bg-white overflow-hidden">
+          {/* Bottom: Interaction Panel */}
+          <div className="flex-1 overflow-y-auto">
             <InteractionPanel
-              messages={state.messages}
-              onSendMessage={handleSendMessage}
+              messages={messages}
+              input={input}
+              isLoading={isLoading}
+              error={error}
+              onInputChange={handleInputChange}
+              onSubmit={handleSubmit}
             />
           </div>
         </div>
 
-        <div className="w-96 border-l border-gray-200 bg-white overflow-y-auto">
-          <EvaluationPanel 
-            messages={state.messages} 
-            trace={state.trace}
+        {/* Right Panel - Evaluation */}
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+          <EvaluationPanel
+            trace={trace}
           />
         </div>
       </div>
