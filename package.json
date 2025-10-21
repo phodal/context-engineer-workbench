@@ -7,6 +7,9 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
@@ -15,23 +18,30 @@
     "@ai-sdk/deepseek": "^1.0.23",
     "@ai-sdk/openai": "^2.0.53",
     "@ai-sdk/react": "^2.0.76",
+    "@langchain/core": "^1.0.1",
     "ai": "^5.0.76",
+    "langchain": "^1.0.1",
     "next": "15.5.6",
     "openai": "^6.6.0",
     "playwright": "^1.56.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.6",
+    "jest": "^30.2.0",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.5",
     "typescript": "^5"
   }
 }

@@ -6,57 +6,96 @@
 
 ---
 
-## 1. RAG Module（检索增强生成模块）
+## 1. RAG Module（检索增强生成模块）- “检索器即工具”架构
 
-### 1.1 核心职责
+### 1.1 核心理念：检索器即工具 (Retriever-as-a-Tool)
 
-- **文档管理**：上传、解析、分块、嵌入文档
-- **向量存储**：管理向量数据库（初期使用内存存储，后期支持 Pinecone/Chroma）
-- **检索引擎**：支持语义、关键词、混合搜索
-- **可视化追踪**：显示检索过程、相似度分数、文档块
+我们将 RAG 的核心能力——“检索”，从一个单一的、可配置的模块，重塑为一个由多个独立、可组合的 **“检索工具”** 构成的工具集。每个工具代表一种特定的检索策略。这种设计使得上层应用（如 Agent）可以根据任务需求，动态选择最合适的检索工具，甚至组合使用它们。
+
+这种模式的优势：
+- **模块化与可扩展性**：每种检索算法（语义、关键词、父文档等）都是一个独立的工具，方便单独实现、测试和优化。未来增加新的检索策略只需增加一个新工具。
+- **灵活性与组合性**：Agent 可以根据用户查询的意图，自主选择调用 `semantic_search` 还是 `self_query_search`。也可以通过 `ensemble_retriever` 将多个检索结果合并，实现更复杂的检索逻辑。
+- **教学友好**：学员可以清晰地看到不同检索策略的输入、输出和应用场景，从实践中理解其差异和优势，符合“为学员练习设计”的初衷。
+- **可观测性**：每次工具调用都是一个独立的、可追踪的事件，便于观察和调试检索过程。
 
 ### 1.2 架构设计
+
+新的架构将 RAG Module 拆分为 **Indexing Pipeline**（负责文档处理和索引构建）和 **Retrieval Toolkit**（提供一组检索工具）。
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    RAG Module                            │
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Document   │  │   Embedding  │  │ Vector Store │  │
-│  │   Processor  │→ │   Service    │→ │  (Memory)    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│         ↑                                      ↓         │
-│    Upload/Parse              Similarity Search         │
-│    Chunking                   Metadata Filter          │
-│    Splitting                  Ranking                  │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │         Retrieval Pipeline                       │  │
-│  │  - Query Embedding                              │  │
-│  │  - Similarity Search (top_k)                    │  │
-│  │  - Threshold Filtering                          │  │
-│  │  - Result Ranking & Reranking                   │  │
-│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────┐      ┌─────────────────────────┐   │
+│  │ Indexing Pipeline│      │    Retrieval Toolkit    │   │
+│  │ (Offline Process)│      │   (Tools for Agents)    │   │
+│  ├──────────────────┤      ├─────────────────────────┤   │
+│  │ - Document Loader│      │ - semantic_search       │   │
+│  │ - Text Splitter  │      │ - keyword_search        │   │
+│  │ - Embedding Model│      │ - hybrid_search         │   │
+│  │ - Vector Store   │      │ - parent_document_search│   │
+│  └──────────────────┘      │ - self_query_search     │   │
+│         │                  │ - ensemble_retriever    │   │
+│         └──────────────────┼─────────────────────────┘   │
+│                            │                             │
+│                            ↓                             │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │                   Agent Executor                   │    │
+│  └──────────────────────────────────────────────────┘    │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 1.3 核心接口定义
+### 1.3 核心工具（Tool）定义
+
+我们将提供一系列符合 LangChain.js `Tool` 规范的检索器。
 
 ```typescript
-// RAG 配置接口
-interface RAGConfig {
-  enabled: boolean;
-  chunkSize: number;           // 文档分块大小 (default: 500)
-  chunkOverlap: number;        // 分块重叠 (default: 50)
-  topK: number;                // 检索结果数量 (default: 3)
-  similarityThreshold: number; // 相似度阈值 (default: 0.7)
-  searchMode: 'semantic' | 'keyword' | 'hybrid';
-  embeddingModel: string;      // 嵌入模型 (default: 'text-embedding-3-small')
-}
+import { Tool } from "langchain/tools";
 
-// 文档块接口
+// 1. 基础语义搜索工具
+const semanticSearchTool = new Tool({
+  name: "semantic_search",
+  description: "Performs semantic search on the vector store. Use for finding conceptually similar documents.",
+  func: async (query: string, topK: number = 3) => { /* ... */ },
+});
+
+// 2. 关键词搜索工具 (BM25/TF-IDF)
+const keywordSearchTool = new Tool({
+  name: "keyword_search",
+  description: "Performs keyword-based search. Use for finding documents with specific terms or keywords.",
+  func: async (query: string, topK: number = 3) => { /* ... */ },
+});
+
+// 3. 混合搜索工具
+const hybridSearchTool = new Tool({
+  name: "hybrid_search",
+  description: "Combines semantic and keyword search results for balanced relevance. Good for general queries.",
+  func: async (query: string, topK: number = 3) => { /* ... */ },
+});
+
+// 4. 父文档检索工具
+const parentDocumentSearchTool = new Tool({
+  name: "parent_document_search",
+  description: "Retrieves smaller, more precise chunks first, then returns their larger parent documents for better context. Useful when details are needed but full context is important.",
+  func: async (query: string, topK: number = 3) => { /* ... */ },
+});
+
+// 5. 自查询检索工具
+const selfQuerySearchTool = new Tool({
+  name: "self_query_search",
+  description: "Parses the user's query to extract both the search query and metadata filters. Use when the query contains constraints like dates, sources, or categories (e.g., 'recent documents about AI').",
+  func: async (queryWithFilters: string) => { /* ... */ },
+});
+```
+
+### 1.4 核心接口定义
+
+文档处理和检索结果的接口保持不变，但配置接口将演变为工具级的参数。
+
+```typescript
+// 文档块接口 (保持不变)
 interface DocumentChunk {
   id: string;
   content: string;
@@ -64,11 +103,12 @@ interface DocumentChunk {
     source: string;
     chunkIndex: number;
     pageNumber?: number;
+    // ... other metadata for self-querying
   };
   embedding?: number[];
 }
 
-// 检索结果接口
+// 检索结果接口 (保持不变)
 interface RetrievalResult {
   chunks: Array<{
     chunk: DocumentChunk;
@@ -76,25 +116,26 @@ interface RetrievalResult {
     rank: number;
   }>;
   query: string;
+  retrieverName: string; // 标明由哪个工具产生
   totalTime: number;
-  embeddingTime: number;
-  searchTime: number;
 }
 ```
 
-### 1.4 实现策略
+### 1.5 实现策略
 
 **第一阶段（MVP）**：
-- 使用 LangChain.js 的 `RecursiveCharacterTextSplitter`
-- 集成 OpenAI Embeddings（支持 DeepSeek 兼容接口）
-- 内存向量存储（`MemoryVectorStore`）
-- 基础相似度搜索
+- **Indexing**：使用 LangChain.js 的 `RecursiveCharacterTextSplitter`、OpenAI Embeddings 和内存向量存储 `MemoryVectorStore`。
+- **Tools**:
+  - 实现 `semantic_search` 工具作为基础。
+  - 包装 `ParentDocumentRetriever` 来快速实现 `parent_document_search` 工具。
+  - 提供一个简单的 `keyword_search` 模拟（如基于 `String.includes()`），用于教学演示。
 
 **第二阶段**：
-- 支持多种文档格式（PDF、Markdown、HTML）
-- 集成 Pinecone/Chroma 持久化存储
-- 实现混合搜索（BM25 + 语义）
-- 添加重排（Reranking）功能
+- **Indexing**：支持 PDF、Markdown 等多种格式；集成 Chroma/Pinecone 等持久化向量数据库。
+- **Tools**:
+  - 实现真正的 `keyword_search`（如集成 `flexsearch` 或 `tantivy-node`）。
+  - 实现 `hybrid_search`，融合语义和关键词搜索结果。
+  - 基于 LangChain.js 的 `SelfQueryRetriever` 实现 `self_query_search` 工具。
 
 **关键依赖**：
 ```json
