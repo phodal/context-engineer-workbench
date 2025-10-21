@@ -20,7 +20,7 @@ npm install
 API Key 已经配置在 `.env.local` 文件中：
 
 ```
-DEEPSEEK_API_KEY=sk-19c63faaa36d4bb99368f3991e5fc6fc
+DEEPSEEK_API_KEY=sk-xxx
 ```
 
 ⚠️ **重要**: `.env.local` 文件已在 `.gitignore` 中，不会被提交到代码库。
