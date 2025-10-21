@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import type { UIMessage } from 'ai';
 
 interface TraceStep {
   step: string;
@@ -16,11 +11,11 @@ interface TraceStep {
 }
 
 interface EvaluationPanelProps {
-  messages: Message[];
+  messages: UIMessage[];
   trace: TraceStep[];
 }
 
-export default function EvaluationPanel({  trace }: EvaluationPanelProps) {
+export default function EvaluationPanel({ messages, trace }: EvaluationPanelProps) {
   const [viewMode, setViewMode] = useState<'trace' | 'comparison'>('trace');
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 

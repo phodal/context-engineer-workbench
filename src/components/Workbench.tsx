@@ -67,11 +67,11 @@ export default function Workbench() {
   // Manual input state management for AI SDK 5.0
   const [input, setInput] = useState('');
 
-  // Use AI SDK's useChat hook with minimal configuration
-  const { messages, sendMessage, error } = useChat();
+  // Use AI SDK's useChat hook with proper configuration for v5.0
+  const { messages, sendMessage, error, status } = useChat();
 
-  // Ensure isLoading has a default value (AI SDK 5.0 compatibility)
-  const isLoading = false;
+  // Derive isLoading from status
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   // Manual input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -82,9 +82,16 @@ export default function Workbench() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
-    
-    // Send message as string (should work in AI SDK 5.0)
-    // sendMessage(input); // Disabled for now
+
+    // Send message using AI SDK 5.0 - use CreateUIMessage format
+    sendMessage({
+      role: 'user',
+      parts: [{ type: 'text', text: input }]
+    }, {
+      body: {
+        config: config
+      }
+    });
     setInput(''); // Clear input after sending
   };
 
@@ -148,7 +155,7 @@ export default function Workbench() {
           {/* Bottom: Interaction Panel */}
           <div className="flex-1 overflow-y-auto">
             <InteractionPanel
-              messages={messages as never}
+              messages={messages}
               input={input}
               isLoading={isLoading}
               error={error}
@@ -160,7 +167,7 @@ export default function Workbench() {
 
         {/* Right Panel - Evaluation */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
-          <EvaluationPanel messages={messages as never}
+          <EvaluationPanel messages={messages}
             trace={trace}
           />
         </div>

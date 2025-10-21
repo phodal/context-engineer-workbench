@@ -1,17 +1,10 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-// import type { UIMessage } from 'ai';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  createdAt: number;
-}
+import type { UIMessage } from 'ai';
 
 interface InteractionPanelProps {
-  messages: Message[];
+  messages: UIMessage[];
   input: string;
   isLoading: boolean;
   error: Error | undefined;
@@ -64,29 +57,37 @@ export default function InteractionPanel({
           </div>
         ) : (
           <>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+            {messages.map((message) => {
+              // Extract text content from UIMessage parts
+              const textContent = message.parts
+                ?.filter(part => part.type === 'text')
+                .map(part => part.text)
+                .join('') || '';
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="text-sm whitespace-pre-wrap">{message.content}</div>
                   <div
-                    className={`text-xs mt-2 ${
-                      message.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                    className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-900'
                     }`}
                   >
-                    {new Date(message.createdAt || Date.now()).toLocaleTimeString()}
+                    <div className="text-sm whitespace-pre-wrap">{textContent}</div>
+                    <div
+                      className={`text-xs mt-2 ${
+                        message.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                      }`}
+                    >
+                      {new Date().toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-lg px-4 py-3">
