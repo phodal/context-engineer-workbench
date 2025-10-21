@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { UIMessage } from 'ai';
 import type { APIMetrics } from '@/lib/metrics';
 import { formatDuration } from '@/lib/metrics';
+import StructuredOutputViewer from './StructuredOutputViewer';
+import { extractAllStructuredOutputs } from '@/lib/structured-output';
 
 interface TraceStep {
   step: string;
@@ -18,9 +20,24 @@ interface EvaluationPanelProps {
   metrics?: APIMetrics | null;
 }
 
-export default function EvaluationPanel({ trace, metrics }: EvaluationPanelProps) {
+export default function EvaluationPanel({ messages, trace, metrics }: EvaluationPanelProps) {
   const [viewMode, setViewMode] = useState<'trace' | 'comparison'>('trace');
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
+
+  // Extract structured outputs from the last assistant message
+  const structuredOutputs = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== 'assistant') {
+      return [];
+    }
+
+    const textContent = lastMessage.parts
+      ?.filter(part => part.type === 'text')
+      .map(part => part.text)
+      .join('') || '';
+
+    return extractAllStructuredOutputs(textContent);
+  }, [messages]);
 
   const toggleStep = (index: number) => {
     const newExpanded = new Set(expandedSteps);
@@ -101,6 +118,11 @@ export default function EvaluationPanel({ trace, metrics }: EvaluationPanelProps
             </div>
           </div>
         </div>
+      )}
+
+      {/* Structured Output Parse - Display if available */}
+      {structuredOutputs.length > 0 && (
+        <StructuredOutputViewer outputs={structuredOutputs} />
       )}
 
       {/* Trace Performance Metrics - Fallback */}
