@@ -17,11 +17,11 @@ export default function Header() {
                 </div>
 
                 <nav className="flex items-center space-x-6">
-                    <button className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors">
-                        Getting Started
-                    </button>
                     <Link className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
                           href="/rag-keyword-playground">Keyword Search
+                    </Link>
+                    <Link className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                          href="/rag-vector-playground">Vector Search
                     </Link>
                 </nav>
             </div>
