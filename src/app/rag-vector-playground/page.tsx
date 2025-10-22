@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
 import VectorSearchResultsPanel from '@/components/rag-playground/VectorSearchResultsPanel';
 import PipelineWithPapers from '@/components/rag-playground/PipelineWithPapers';
+import { initializeVectorStore, vectorSearch } from '@/lib/rag/vector-store';
 
 interface VectorEmbedding {
   text: string;
@@ -22,6 +23,7 @@ interface SearchResult {
   title: string;
   content: string;
   score: number;
+  embedding?: number[];
 }
 
 interface TokenCost {
@@ -99,23 +101,65 @@ export default function RAGVectorPlaygroundPage() {
       const candidateEmbeddingsData = await candidateEmbeddingsResponse.json();
       const candidateEmbeddings = candidateEmbeddingsData.embeddings || [];
 
-      // Step 4: Calculate cosine similarity between query and candidates
-      const results: SearchResult[] = candidateDocs.map((doc, index) => {
-        const similarity = cosineSimilarity(
-          queryEmbedding.embedding,
-          candidateEmbeddings[index] || []
-        );
-        return {
+      // Step 4: Store candidate embeddings in RXDB and perform vector search
+      try {
+        // Prepare documents with embeddings for RXDB
+        const docsWithEmbeddings = candidateDocs.map((doc, index) => ({
           id: doc.id,
           title: doc.title,
           content: doc.content,
-          score: similarity,
-        };
-      });
+          embedding: candidateEmbeddings[index] || [],
+          createdAt: Date.now(),
+        }));
 
-      // Sort by similarity score
-      results.sort((a, b) => b.score - a.score);
-      setSearchResults(results);
+        console.log('Initializing RXDB with docs:', docsWithEmbeddings.length);
+
+        // Initialize RXDB vector store with candidate embeddings
+        await initializeVectorStore(docsWithEmbeddings);
+
+        console.log('RXDB initialized, performing vector search...');
+
+        // Perform vector search using RXDB
+        const searchResults = await vectorSearch(queryEmbedding.embedding, 5);
+
+        console.log('Vector search results:', searchResults.length);
+        console.log('First search result:', searchResults[0]);
+
+        // Map RXDB results to SearchResult format with embeddings
+        const results: SearchResult[] = searchResults.map(result => ({
+          id: result.id,
+          title: result.title,
+          content: result.content,
+          score: result.score,
+          embedding: result.embedding,
+        }));
+
+        console.log('Final results to display:', results.length);
+        console.log('First final result:', results[0]);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('RXDB vector search error:', error);
+        // Fallback to manual cosine similarity if RXDB fails
+        console.log('Falling back to manual cosine similarity...');
+        const results: SearchResult[] = candidateDocs.map((doc, index) => {
+          const similarity = cosineSimilarity(
+            queryEmbedding.embedding,
+            candidateEmbeddings[index] || []
+          );
+          return {
+            id: doc.id,
+            title: doc.title,
+            content: doc.content,
+            score: similarity,
+            embedding: candidateEmbeddings[index],
+          };
+        });
+
+        // Sort by similarity score
+        results.sort((a, b) => b.score - a.score);
+        console.log('Fallback results:', results.length);
+        setSearchResults(results);
+      }
 
       // Calculate token costs
       const generateCandidatesTokens = candidatesData.usage?.promptTokens || 100;
@@ -196,7 +240,7 @@ export default function RAGVectorPlaygroundPage() {
             RAG Vector Search Playground
           </h1>
           <p className="text-slate-600">
-            Learn how vector-based semantic search works in RAG systems
+            Learn how vector-based semantic search works in RAG systems with GLM Embedding-3 & RXDB
           </p>
           <p className="text-sm text-slate-500 mt-2">
             Flow: Query → Generate Candidates → Generate Embeddings → Cosine Similarity
@@ -225,7 +269,7 @@ export default function RAGVectorPlaygroundPage() {
             onRewrite={handleQueryEmbedding}
             rewriteResult={queryEmbedding ? { 
               original: queryEmbedding.text, 
-              rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 3).map(v => v.toFixed(3)).join(', ')}...]`,
+              rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 30).join(', ')}...]`,
               technique: 'GLM Embedding-3',
               timestamp: Date.now()
             } : null}

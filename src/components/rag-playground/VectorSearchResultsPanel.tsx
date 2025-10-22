@@ -8,6 +8,7 @@ interface SearchResult {
   title: string;
   content: string;
   score: number;
+  embedding?: number[];
 }
 
 interface ExecutionResult {
@@ -52,15 +53,27 @@ export default function VectorSearchResultsPanel({
           </div>
 
           <div className="p-6 space-y-4">
-            {/* Cosine Similarity Formula */}
+            {/* RXDB Vector Search Formula */}
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <p className="text-xs font-semibold text-slate-900 mb-2">Cosine Similarity Formula:</p>
-              <div className="bg-white p-3 rounded border border-slate-200 overflow-x-auto">
-                <code className="text-xs text-slate-700 font-mono whitespace-nowrap">
-                  similarity = (a · b) / (||a|| × ||b||)
-                </code>
+              <p className="text-xs font-semibold text-slate-900 mb-2">RXDB Vector Search (Distance to Samples):</p>
+              <div className="bg-white p-3 rounded border border-slate-200 overflow-x-auto space-y-2">
+                <div>
+                  <p className="text-xs text-slate-600 mb-1">1. Euclidean Distance:</p>
+                  <code className="text-xs text-slate-700 font-mono whitespace-nowrap">
+                    distance = √(Σ(a<sub>i</sub> - b<sub>i</sub>)²)
+                  </code>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-600 mb-1">2. Convert to Similarity:</p>
+                  <code className="text-xs text-slate-700 font-mono whitespace-nowrap">
+                    similarity = 1 / (1 + distance)
+                  </code>
+                </div>
               </div>
               <p className="text-xs text-slate-600 mt-2">
+                <span className="font-semibold">Method:</span> Distance to Samples Indexing (5 sample vectors)
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
                 <span className="font-semibold">Range:</span> 0 to 1 (higher = more semantically similar)
               </p>
             </div>
@@ -92,7 +105,7 @@ export default function VectorSearchResultsPanel({
                     {result.content}
                   </p>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mb-3">
                     <div className="flex-1">
                       <div className="bg-slate-200 rounded-full h-2 overflow-hidden">
                         <div
@@ -105,6 +118,21 @@ export default function VectorSearchResultsPanel({
                       {result.score.toFixed(3)}
                     </span>
                   </div>
+
+                  {/* Embedding Vector Display */}
+                  {result.embedding && (
+                    <div className="bg-slate-100 rounded p-2 border border-slate-300">
+                      <p className="text-xs font-semibold text-slate-700 mb-1">Embedding Vector (1024-dim):</p>
+                      <div className="text-xs text-slate-600 font-mono overflow-x-auto">
+                        <code>
+                          [{result.embedding.slice(0, 5).map(v => v.toFixed(4)).join(', ')}, ..., {result.embedding.slice(-5).map(v => v.toFixed(4)).join(', ')}]
+                        </code>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Showing first 5 and last 5 dimensions of {result.embedding.length} total
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
