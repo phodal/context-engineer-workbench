@@ -20,13 +20,7 @@ export default function Header() {
             Getting Started
           </button>
           <button className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors">
-            Examples
-          </button>
-          <button className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors">
-            Documentation
-          </button>
-          <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
-            Export Config
+            RAG Lab Keyword Search
           </button>
         </nav>
       </div>
