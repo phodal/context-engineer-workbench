@@ -23,6 +23,9 @@ export default function Header() {
                     <Link className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
                           href="/rag-vector-playground">Vector Search
                     </Link>
+                    <Link className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                          href="/treesitter-playground">TreeSitter
+                    </Link>
                 </nav>
             </div>
         </header>
