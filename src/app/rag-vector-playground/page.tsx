@@ -1,8 +1,8 @@
-'use client';
+ 'use client';
 
 import React, { useState, useCallback } from 'react';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
-import ResultsPanel from '@/components/rag-playground/ResultsPanel';
+import VectorSearchResultsPanel from '@/components/rag-playground/VectorSearchResultsPanel';
 import PipelineWithPapers from '@/components/rag-playground/PipelineWithPapers';
 
 interface VectorEmbedding {
@@ -251,14 +251,8 @@ export default function RAGVectorPlaygroundPage() {
             </div>
           )}
 
-          {/* Bottom: Results Panel */}
-          <ResultsPanel
-            rewriteResult={queryEmbedding ? { 
-              original: queryEmbedding.text, 
-              rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 3).map(v => v.toFixed(3)).join(', ')}...]`,
-              technique: 'GLM Embedding-3',
-              timestamp: Date.now()
-            } : null}
+          {/* Bottom: Vector Search Results Panel */}
+          <VectorSearchResultsPanel
             searchResults={searchResults}
             executionResult={executionResult}
             onExecute={handleExecute}
