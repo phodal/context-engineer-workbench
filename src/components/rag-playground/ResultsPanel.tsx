@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface RewriteResult {
   original: string;
@@ -51,127 +52,7 @@ export default function ResultsPanel({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
-        {/* Pipeline Steps - Compact */}
-        <div className="col-span-2 bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 px-4 py-3 border-b border-slate-200">
-            <h2 className="text-sm font-bold text-slate-900">Pipeline Steps</h2>
-          </div>
-
-          <div className="p-4">
-            <div className="space-y-2">
-            {/* Step 1: Input */}
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-900 flex items-center justify-center font-bold text-xs">
-                ✓
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-900">Query</p>
-              </div>
-            </div>
-
-            {/* Step 2: Rewrite */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                  rewriteResult
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {rewriteResult ? '✓' : '2'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-900">Rewrite</p>
-              </div>
-            </div>
-
-            {/* Step 3: Search */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                  searchResults.length > 0
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {searchResults.length > 0 ? '✓' : '3'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-900">Search</p>
-              </div>
-            </div>
-
-            {/* Step 4: Execute */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                  executionResult.status === 'success'
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {executionResult.status === 'success' ? '✓' : '4'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-900">Execute</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reference Papers */}
-        <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 px-4 py-3 border-b border-slate-200">
-            <h2 className="text-sm font-bold text-slate-900">Papers</h2>
-          </div>
-
-          <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
-            <a
-              href="https://arxiv.org/abs/2212.10496"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-2 rounded hover:bg-slate-50 transition-colors border border-slate-200 hover:border-cyan-300"
-            >
-              <p className="text-xs font-semibold text-slate-900 line-clamp-2">HyDE: Hypothetical Document Embeddings</p>
-              <p className="text-xs text-slate-500 mt-1">Query expansion via hypothetical documents</p>
-            </a>
-
-            <a
-              href="https://arxiv.org/abs/2305.03653"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-2 rounded hover:bg-slate-50 transition-colors border border-slate-200 hover:border-cyan-300"
-            >
-              <p className="text-xs font-semibold text-slate-900 line-clamp-2">Query2Doc: Query Expansion</p>
-              <p className="text-xs text-slate-500 mt-1">Generating pseudo-documents for retrieval</p>
-            </a>
-
-            <a
-              href="https://en.wikipedia.org/wiki/Okapi_BM25"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-2 rounded hover:bg-slate-50 transition-colors border border-slate-200 hover:border-cyan-300"
-            >
-              <p className="text-xs font-semibold text-slate-900 line-clamp-2">BM25 Algorithm</p>
-              <p className="text-xs text-slate-500 mt-1">Probabilistic retrieval ranking</p>
-            </a>
-
-            <a
-              href="https://arxiv.org/abs/2005.11401"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-2 rounded hover:bg-slate-50 transition-colors border border-slate-200 hover:border-cyan-300"
-            >
-              <p className="text-xs font-semibold text-slate-900 line-clamp-2">RAG: Retrieval-Augmented Generation</p>
-              <p className="text-xs text-slate-500 mt-1">Combining retrieval with generation</p>
-            </a>
-          </div>
-        </div>
-      </div>
-      </div>
-
-      {/* Keyword Search Results */}
+      {/* Search Results */}
       {searchResults.length > 0 && (
         <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
           <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-slate-200">
@@ -259,16 +140,19 @@ export default function ResultsPanel({
             </button>
 
             {executionResult.status === 'success' && executionResult.result && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-xs text-green-900 leading-relaxed">
-                  {executionResult.result}
-                </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                <div className="prose prose-sm max-w-none text-slate-900 text-sm leading-relaxed">
+                  <ReactMarkdown>
+                    {executionResult.result}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
 
             {executionResult.status === 'error' && executionResult.error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-xs text-red-700">{executionResult.error}</p>
+                <p className="text-sm text-red-700 font-semibold mb-2">Error</p>
+                <p className="text-xs text-red-600">{executionResult.error}</p>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
 import ResultsPanel from '@/components/rag-playground/ResultsPanel';
+import PipelineWithPapers from '@/components/rag-playground/PipelineWithPapers';
 
 interface RewriteResult {
   original: string;
@@ -176,10 +177,18 @@ export default function RAGKeywordPlaygroundPage() {
         </div>
       </header>
 
-      {/* Main Content - Two Column Layout */}
+      {/* Main Content - Vertical Layout */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-2 gap-8">
-          {/* Left Panel: Interaction */}
+        <div className="space-y-8">
+
+            {/* Top: Pipeline with Papers */}
+            <PipelineWithPapers
+                rewriteResult={rewriteResult}
+                searchResultsCount={searchResults.length}
+                executionStatus={executionResult.status}
+            />
+
+            {/* Middle: Interaction Panel */}
           <InteractionPanel
             userQuery={userQuery}
             onQueryChange={setUserQuery}
@@ -189,7 +198,7 @@ export default function RAGKeywordPlaygroundPage() {
             isLoading={isLoading}
           />
 
-          {/* Right Panel: Results */}
+          {/* Bottom: Results Panel */}
           <ResultsPanel
             rewriteResult={rewriteResult}
             searchResults={searchResults}
