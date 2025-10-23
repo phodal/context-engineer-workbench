@@ -9,17 +9,25 @@
 const originalFunction = global.Function;
 
 // Helper function to create mock tree nodes
-function createMockNode(type: string, text: string, startRow = 0, startCol = 0, endRow = 0, endCol = 0, children: any[] = []): any {
+function createMockNode(
+  type: string,
+  text: string,
+  startRow = 0,
+  startCol = 0,
+  endRow = 0,
+  endCol = 0,
+  children: any[] = []
+): any {
   return {
     type,
     text,
     startPosition: { row: startRow, column: startCol },
     endPosition: { row: endRow, column: endCol },
     childCount: children.length,
-    namedChildCount: children.filter(c => c.isNamed()).length,
+    namedChildCount: children.filter((c) => c.isNamed()).length,
     children,
     child: (index: number) => children[index] || null,
-    namedChild: (index: number) => children.filter(c => c.isNamed())[index] || null,
+    namedChild: (index: number) => children.filter((c) => c.isNamed())[index] || null,
     firstChild: children[0] || null,
     lastChild: children[children.length - 1] || null,
     nextSibling: null,
@@ -44,7 +52,15 @@ function parseJavaScript(code: string): any {
   while ((match = functionRegex.exec(code)) !== null) {
     const functionName = match[1];
     const nameNode = createMockNode('identifier', functionName);
-    const functionNode = createMockNode('function_declaration', match[0], 0, match.index, 0, match.index + match[0].length, [nameNode]);
+    const functionNode = createMockNode(
+      'function_declaration',
+      match[0],
+      0,
+      match.index,
+      0,
+      match.index + match[0].length,
+      [nameNode]
+    );
     children.push(functionNode);
   }
 
@@ -53,7 +69,15 @@ function parseJavaScript(code: string): any {
   while ((match = classRegex.exec(code)) !== null) {
     const className = match[1];
     const nameNode = createMockNode('identifier', className);
-    const classNode = createMockNode('class_declaration', match[0], 0, match.index, 0, match.index + match[0].length, [nameNode]);
+    const classNode = createMockNode(
+      'class_declaration',
+      match[0],
+      0,
+      match.index,
+      0,
+      match.index + match[0].length,
+      [nameNode]
+    );
     children.push(classNode);
   }
 
@@ -70,7 +94,15 @@ function parsePython(code: string): any {
   while ((match = functionRegex.exec(code)) !== null) {
     const functionName = match[1];
     const nameNode = createMockNode('identifier', functionName);
-    const functionNode = createMockNode('function_definition', match[0], 0, match.index, 0, match.index + match[0].length, [nameNode]);
+    const functionNode = createMockNode(
+      'function_definition',
+      match[0],
+      0,
+      match.index,
+      0,
+      match.index + match[0].length,
+      [nameNode]
+    );
     children.push(functionNode);
   }
 
@@ -79,7 +111,15 @@ function parsePython(code: string): any {
   while ((match = classRegex.exec(code)) !== null) {
     const className = match[1];
     const nameNode = createMockNode('identifier', className);
-    const classNode = createMockNode('class_definition', match[0], 0, match.index, 0, match.index + match[0].length, [nameNode]);
+    const classNode = createMockNode(
+      'class_definition',
+      match[0],
+      0,
+      match.index,
+      0,
+      match.index + match[0].length,
+      [nameNode]
+    );
     children.push(classNode);
   }
 
@@ -137,8 +177,10 @@ const mockModules: Record<string, any> = {
         // Mock language loading
         return {
           name: languageName,
-          query: (queryString: string) => ({
-            matches: (node: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          query: (_queryString: string) => ({
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            matches: (_node: any) => {
               // Return mock query matches
               return [
                 {
@@ -174,7 +216,7 @@ const mockModules: Record<string, any> = {
 // Mock Function constructor to handle dynamic imports
 (global as any).Function = function (...args: any[]) {
   const code = args[args.length - 1];
-  
+
   // Check if this is a dynamic import call
   if (code && typeof code === 'string' && code.includes('import(')) {
     return async () => {
@@ -186,7 +228,7 @@ const mockModules: Record<string, any> = {
       throw new Error(`Module not mocked: ${match?.[1] || 'unknown'}`);
     };
   }
-  
+
   // For non-import Function calls, use original behavior
   return originalFunction.apply(this, args);
 };
@@ -202,10 +244,10 @@ console.error = (...args: any[]) => {
   if (
     typeof message === 'string' &&
     (message.includes('Failed to initialize parser') ||
-     message.includes('Parse error') ||
-     message.includes('Failed to load language') ||
-     message.includes('Query error') ||
-     message.includes('Error building code graph'))
+      message.includes('Parse error') ||
+      message.includes('Failed to load language') ||
+      message.includes('Query error') ||
+      message.includes('Error building code graph'))
   ) {
     // Suppress these expected errors in test environment
     return;
