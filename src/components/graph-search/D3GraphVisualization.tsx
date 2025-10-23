@@ -12,6 +12,8 @@ interface D3GraphVisualizationProps {
   onNodeSelect?: (nodeId: string, metadata?: Record<string, unknown>) => void;
   onSingleClick?: (event: MouseEvent, node: any) => void;
   onDoubleClick?: (event: MouseEvent, node: any) => void;
+  onHighlightCode?: (label: string, metadata?: Record<string, unknown>) => void;
+  onNodeMetadata?: (metadata?: Record<string, unknown>) => void;
 }
 
 interface D3Node extends d3.SimulationNodeDatum {
@@ -20,6 +22,7 @@ interface D3Node extends d3.SimulationNodeDatum {
   type: string;
   color?: string;
   size?: number;
+  metadata?: Record<string, unknown>;
 }
 
 interface D3Link extends d3.SimulationLinkDatum<D3Node> {
@@ -39,6 +42,8 @@ export default function D3GraphVisualization({
   onNodeSelect,
   onSingleClick = () => {},
   onDoubleClick = () => {},
+  onHighlightCode = () => {},
+  onNodeMetadata = () => {},
 }: D3GraphVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -60,6 +65,7 @@ export default function D3GraphVisualization({
       type: node.type,
       color: node.color || '#6b7280',
       size: node.size || 10,
+      metadata: node.metadata,
     }));
 
     const links: D3Link[] = data.edges.map((edge) => ({
@@ -167,6 +173,17 @@ export default function D3GraphVisualization({
             size: d.size,
           });
         }
+
+        // Trigger code highlighting with full metadata
+        if (onHighlightCode) {
+          onHighlightCode(d.label, {
+            label: d.label,
+            type: d.type,
+            color: d.color,
+            size: d.size,
+            ...d.metadata,
+          });
+        }
       })
       .on('dblclick', function (event: MouseEvent, d: D3Node) {
         onDoubleClick(event, d);
@@ -232,7 +249,15 @@ export default function D3GraphVisualization({
     return () => {
       simulation.stop();
     };
-  }, [data, onNodeClick, onNodeSelect, onSingleClick, onDoubleClick]);
+  }, [
+    data,
+    onNodeClick,
+    onNodeSelect,
+    onSingleClick,
+    onDoubleClick,
+    onHighlightCode,
+    onNodeMetadata,
+  ]);
 
   if (isLoading) {
     return (

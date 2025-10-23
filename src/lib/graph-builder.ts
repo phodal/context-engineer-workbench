@@ -22,7 +22,14 @@ export interface EdgeAttributes {
 export type CodeGraph = Graph<NodeAttributes, EdgeAttributes>;
 
 export interface GraphData {
-  nodes: Array<{ id: string; label: string; type: string; color?: string; size?: number }>;
+  nodes: Array<{
+    id: string;
+    label: string;
+    type: string;
+    color?: string;
+    size?: number;
+    metadata?: Record<string, unknown>;
+  }>;
   edges: Array<{ source: string; target: string; type: string }>;
   metadata: {
     language: string;
@@ -78,6 +85,8 @@ function extractDefinitions(
         metadata: {
           startLine: node.startPosition.row,
           endLine: node.endPosition.row,
+          startColumn: node.startPosition.column,
+          endColumn: node.endPosition.column,
           nodeType: node.type,
         },
       });
@@ -95,43 +104,94 @@ function extractDefinitions(
 }
 
 /**
- * Extract function calls and references
+ * Extract function calls and references with context awareness
  */
 function extractReferences(
   node: TreeNode | null,
   language: string,
-  references: Array<{ caller: string; callee: string; type: string }> = []
+  references: Array<{ caller: string; callee: string; type: string }> = [],
+  currentContext: string = 'global'
 ): Array<{ caller: string; callee: string; type: string }> {
   if (!node) return references;
+
+  // Update context if we're entering a function or method
+  let context = currentContext;
+  if (node.isNamed) {
+    const patterns: Record<string, string[]> = {
+      javascript: [
+        'function_declaration',
+        'class_declaration',
+        'arrow_function',
+        'method_definition',
+      ],
+      typescript: [
+        'function_declaration',
+        'class_declaration',
+        'method_definition',
+        'interface_declaration',
+      ],
+      python: ['function_definition', 'class_definition'],
+      java: ['method_declaration', 'class_declaration'],
+      rust: ['function_item', 'struct_item', 'impl_item'],
+    };
+
+    const langPatterns = patterns[language] || patterns.javascript;
+
+    if (langPatterns.includes(node.type)) {
+      // Extract name from node
+      let name = 'unknown';
+      if (node.children) {
+        const nameNode = node.children.find(
+          (child) => child.type === 'identifier' || child.type === 'type_identifier'
+        );
+        if (nameNode) {
+          name = nameNode.text;
+        }
+      }
+      context = `${node.type}:${name}`;
+    }
+  }
 
   // Detect function calls
   if (node.type === 'call_expression' && node.children) {
     const funcNode = node.children[0];
     if (funcNode && funcNode.type === 'identifier') {
       references.push({
-        caller: 'global',
+        caller: context,
         callee: funcNode.text,
         type: 'call',
       });
     }
   }
 
-  // Detect class instantiation
+  // Detect class instantiation (new expression)
   if (node.type === 'new_expression' && node.children) {
     const classNode = node.children.find((child) => child.type === 'identifier');
     if (classNode) {
       references.push({
-        caller: 'global',
+        caller: context,
         callee: classNode.text,
         type: 'instantiation',
       });
     }
   }
 
-  // Recursively process children
+  // Detect member expressions (method calls like obj.method())
+  if (node.type === 'member_expression' && node.children) {
+    const propertyNode = node.children[node.children.length - 1];
+    if (propertyNode && propertyNode.type === 'identifier') {
+      references.push({
+        caller: context,
+        callee: propertyNode.text,
+        type: 'method_call',
+      });
+    }
+  }
+
+  // Recursively process children with updated context
   if (node.children) {
     for (const child of node.children) {
-      extractReferences(child, language, references);
+      extractReferences(child, language, references, context);
     }
   }
 
@@ -159,12 +219,31 @@ export async function buildCodeGraph(code: string, language: string): Promise<Co
     });
 
     // Extract references (calls, instantiations, etc.)
-    const references = extractReferences(rootNode, language);
+    const references = extractReferences(rootNode, language, [], 'global');
 
     // Add edges to graph
     references.forEach((ref) => {
-      const targetId = `${ref.type}:${ref.callee}`;
-      if (definitions.has(targetId)) {
+      // Try to find the target node
+      let targetId: string | null = null;
+
+      // First try exact match with type prefix
+      const exactTargetId = `${ref.type}:${ref.callee}`;
+      if (definitions.has(exactTargetId)) {
+        targetId = exactTargetId;
+      } else {
+        // Try to find by class_declaration or function_declaration
+        const classTargetId = `class_declaration:${ref.callee}`;
+        const funcTargetId = `function_declaration:${ref.callee}`;
+
+        if (definitions.has(classTargetId)) {
+          targetId = classTargetId;
+        } else if (definitions.has(funcTargetId)) {
+          targetId = funcTargetId;
+        }
+      }
+
+      // Only add edge if both caller and target exist in definitions
+      if (targetId && (definitions.has(ref.caller) || ref.caller === 'global')) {
         graph.addEdge(ref.caller, targetId, {
           type: ref.type,
           weight: 1,
@@ -224,6 +303,7 @@ export function graphToD3Data(graph: CodeGraph, language: string = 'unknown'): G
       type: attrs.type,
       color: attrs.color,
       size: attrs.size,
+      metadata: attrs.metadata,
     };
   });
 
