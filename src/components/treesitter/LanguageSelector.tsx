@@ -11,7 +11,7 @@ const LANGUAGES = [
   { value: 'bash', label: 'Bash' },
   { value: 'c', label: 'C' },
   { value: 'cpp', label: 'C++' },
-  { value: 'csharp', label: 'C#' },
+  { value: 'c_sharp', label: 'C#' },
   { value: 'go', label: 'Go' },
   { value: 'java', label: 'Java' },
   { value: 'javascript', label: 'JavaScript' },
@@ -19,10 +19,12 @@ const LANGUAGES = [
   { value: 'lua', label: 'Lua' },
   { value: 'php', label: 'PHP' },
   { value: 'python', label: 'Python' },
+  { value: 'rescript', label: 'ReScript' },
   { value: 'rust', label: 'Rust' },
   { value: 'swift', label: 'Swift' },
+  { value: 'tlaplus', label: 'TLA+' },
   { value: 'typescript', label: 'TypeScript' },
-  { value: 'tsx', label: 'TypeScript React' },
+  { value: 'zig', label: 'Zig' },
 ];
 
 export default function LanguageSelector({ value, onChange }: LanguageSelectorProps) {

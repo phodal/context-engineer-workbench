@@ -7,18 +7,36 @@
 
 // Language grammar URLs mapping
 const LANGUAGE_URLS: Record<string, string> = {
+  bash: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-bash.wasm',
+  c: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-c.wasm',
+  cpp: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-cpp.wasm',
+  c_sharp:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-c_sharp.wasm',
+  COBOL:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-COBOL.wasm',
+  go: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-go.wasm',
+  java: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-java.wasm',
   javascript:
     'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-javascript.wasm',
-  typescript:
-    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-typescript.wasm',
+  kotlin:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-kotlin.wasm',
+  lua: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-lua.wasm',
+  ocaml:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-ocaml.wasm',
+  php: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-php.wasm',
   python:
     'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-python.wasm',
-  java: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-java.wasm',
-  cpp: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-cpp.wasm',
-  c: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-c.wasm',
-  go: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-go.wasm',
-  rust: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-rust.wasm',
-  sql: 'https://cdn.jsdelivr.net/npm/tree-sitter-sql@0.1.0/tree-sitter-sql.wasm',
+  rescript:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-rescript.wasm',
+  rust: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-rust.wasm',
+  swift:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-swift.wasm',
+  tlaplus:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-tlaplus.wasm',
+  tsx: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-tsx.wasm',
+  typescript:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-typescript.wasm',
+  zig: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-zig.wasm',
 };
 
 export interface TreeNode {
