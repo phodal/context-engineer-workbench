@@ -76,6 +76,11 @@ function initializeSystem() {
 }
 `;
 
+interface SelectedNode {
+  nodeId: string;
+  metadata?: Record<string, unknown>;
+}
+
 export default function RAGGraphPlaygroundPage() {
   const [code, setCode] = useState(EXAMPLE_CODE);
   const [language, setLanguage] = useState('javascript');
@@ -83,6 +88,7 @@ export default function RAGGraphPlaygroundPage() {
   const [tokenCosts, setTokenCosts] = useState<TokenCost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
 
   const handleBuildGraph = useCallback(async () => {
     if (!code.trim()) {
@@ -92,6 +98,7 @@ export default function RAGGraphPlaygroundPage() {
 
     setIsLoading(true);
     setError(null);
+    setSelectedNode(null);
 
     try {
       // Build the graph using Graphology
@@ -142,6 +149,24 @@ export default function RAGGraphPlaygroundPage() {
       setIsLoading(false);
     }
   }, [code, language]);
+
+  const handleNodeSelect = useCallback(
+    (nodeId: string, metadata?: Record<string, unknown>) => {
+      setSelectedNode({ nodeId, metadata });
+      // Extract the label from nodeId (format: "type:label")
+      const parts = nodeId.split(':');
+      if (parts.length > 1) {
+        const label = parts.slice(1).join(':');
+        // Find the label in the code and scroll to it
+        const index = code.indexOf(label);
+        if (index !== -1) {
+          // You can add code highlighting here if you have a code editor component
+          console.log(`Found "${label}" at position ${index}`);
+        }
+      }
+    },
+    [code]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -226,40 +251,53 @@ export default function RAGGraphPlaygroundPage() {
             </div>
           </div>
 
-          {/* Token Costs */}
-          {tokenCosts.length > 0 && (
+          {/* Graph Visualization */}
+          <D3GraphVisualization
+            data={graphData}
+            isLoading={isLoading}
+            onNodeSelect={handleNodeSelect}
+          />
+
+          {/* Selected Node Info */}
+          {selectedNode && (
             <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-slate-200">
-                <h2 className="text-lg font-bold text-slate-900">Processing Costs</h2>
+              <div className="bg-linear-to-r from-amber-50 to-amber-100 px-6 py-4 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-900">Selected Node</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-3">
-                  {tokenCosts.map((cost) => (
-                    <div key={cost.step} className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium text-slate-700">{cost.step}</span>
-                          <span className="text-sm text-slate-600">{cost.tokens} tokens</span>
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all"
-                            style={{ width: `${cost.percentage}%` }}
-                          />
-                        </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">Node ID</p>
+                    <p className="text-sm text-slate-600 font-mono break-all">
+                      {selectedNode.nodeId}
+                    </p>
+                  </div>
+                  {selectedNode.metadata && (
+                    <>
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">Label</p>
+                        <p className="text-sm text-slate-600">
+                          {(selectedNode.metadata.label as string) || 'N/A'}
+                        </p>
                       </div>
-                      <span className="text-sm font-semibold text-slate-700 w-12 text-right">
-                        {cost.percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  ))}
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">Type</p>
+                        <p className="text-sm text-slate-600">
+                          {(selectedNode.metadata.type as string) || 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">Size</p>
+                        <p className="text-sm text-slate-600">
+                          {(selectedNode.metadata.size as number) || 'N/A'}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           )}
-
-          {/* Graph Visualization */}
-          <D3GraphVisualization data={graphData} isLoading={isLoading} />
 
           {/* Graph Statistics */}
           {graphData && (
