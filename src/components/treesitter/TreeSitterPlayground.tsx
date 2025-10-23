@@ -6,15 +6,13 @@ import TreeViewer from './TreeViewer';
 import QueryEditor from './QueryEditor';
 import LanguageSelector from './LanguageSelector';
 import QueryResults from './QueryResults';
-import { parseCode, queryTreeWithCode, treeToJSON, type QueryMatch } from '@/lib/treesitter-utils';
-
-interface TreeNode {
-  type: string;
-  text: string;
-  startPosition: { row: number; column: number };
-  endPosition: { row: number; column: number };
-  children?: TreeNode[];
-}
+import {
+  parseCode,
+  queryTreeWithCode,
+  treeToJSON,
+  type QueryMatch,
+  type TreeNode,
+} from '@/lib/treesitter-utils';
 
 export default function TreeSitterPlayground() {
   const [language, setLanguage] = useState('javascript');
@@ -26,6 +24,17 @@ export default function TreeSitterPlayground() {
   const [error, setError] = useState<string | null>(null);
   const [showQuery, setShowQuery] = useState(true);
   const [showLog, setShowLog] = useState(true);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<number | undefined>();
+  const [selectedRange, setSelectedRange] = useState<
+    | {
+        startRow: number;
+        startColumn: number;
+        endRow: number;
+        endColumn: number;
+      }
+    | undefined
+  >();
+  const [captureNames, setCaptureNames] = useState<string[]>([]);
 
   // Parse code when it changes
   useEffect(() => {
@@ -54,6 +63,7 @@ export default function TreeSitterPlayground() {
     const executeQuery = async () => {
       if (!query.trim()) {
         setQueryResults([]);
+        setCaptureNames([]);
         return;
       }
 
@@ -62,9 +72,19 @@ export default function TreeSitterPlayground() {
         const results = await queryTreeWithCode(code, query, language);
         setQueryResults(results);
         setError(null);
+
+        // Extract unique capture names from results
+        const names = new Set<string>();
+        results.forEach((match) => {
+          match.captures.forEach((capture) => {
+            names.add(capture.name);
+          });
+        });
+        setCaptureNames(Array.from(names));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Query error');
         setQueryResults([]);
+        setCaptureNames([]);
       } finally {
         setIsLoading(false);
       }
@@ -73,6 +93,28 @@ export default function TreeSitterPlayground() {
     const timer = setTimeout(executeQuery, 500);
     return () => clearTimeout(timer);
   }, [query, code, language]);
+
+  const handleNodeClick = (node: TreeNode) => {
+    if (node.id !== undefined) {
+      setHighlightedNodeId(node.id);
+    }
+    // Set selection range in code editor
+    setSelectedRange({
+      startRow: node.startPosition.row,
+      startColumn: node.startPosition.column,
+      endRow: node.endPosition.row,
+      endColumn: node.endPosition.column,
+    });
+  };
+
+  const handleCaptureClick = (capture: {
+    startRow: number;
+    startColumn: number;
+    endRow: number;
+    endColumn: number;
+  }) => {
+    setSelectedRange(capture);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -121,19 +163,36 @@ export default function TreeSitterPlayground() {
         <div className="grid grid-cols-3 gap-6">
           {/* Left Panel - Code Editor */}
           <div className="col-span-2">
-            <CodeEditor value={code} onChange={setCode} language={language} isLoading={isLoading} />
+            <CodeEditor
+              value={code}
+              onChange={setCode}
+              language={language}
+              isLoading={isLoading}
+              selectedRange={selectedRange}
+            />
           </div>
 
           {/* Right Panel - Tree Viewer or Query */}
           <div className="flex flex-col gap-6">
             <QueryEditor value={query} onChange={setQuery} />
-            {query && queryResults.length > 0 && <QueryResults results={queryResults} />}
+            {query && queryResults.length > 0 && (
+              <QueryResults
+                results={queryResults}
+                captureNames={captureNames}
+                onCaptureClick={handleCaptureClick}
+              />
+            )}
           </div>
         </div>
 
         {/* Bottom Panel - Tree Output */}
         <div className="mt-6">
-          <TreeViewer tree={tree} isLoading={isLoading} />
+          <TreeViewer
+            tree={tree}
+            isLoading={isLoading}
+            onNodeClick={handleNodeClick}
+            highlightedNodeId={highlightedNodeId}
+          />
         </div>
       </div>
     </div>

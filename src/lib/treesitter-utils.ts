@@ -31,6 +31,13 @@ export interface TreeNode {
   startPosition: { row: number; column: number };
   endPosition: { row: number; column: number };
   children?: TreeNode[];
+  // Enhanced fields for better visualization
+  id?: number;
+  fieldName?: string;
+  isNamed?: boolean;
+  isMissing?: boolean;
+  isError?: boolean;
+  isAnonymous?: boolean;
 }
 
 export interface QueryMatch {
@@ -43,6 +50,39 @@ export interface QueryMatch {
     endPosition: { row: number; column: number };
   }>;
 }
+
+// Color palettes for light and dark themes
+export const LIGHT_COLORS = [
+  '#0550ae', // blue
+  '#ab5000', // rust brown
+  '#116329', // forest green
+  '#844708', // warm brown
+  '#6639ba', // purple
+  '#7d4e00', // orange brown
+  '#0969da', // bright blue
+  '#1a7f37', // green
+  '#cf222e', // red
+  '#8250df', // violet
+  '#6e7781', // gray
+  '#953800', // dark orange
+  '#1b7c83', // teal
+];
+
+export const DARK_COLORS = [
+  '#79c0ff', // light blue
+  '#ffa657', // orange
+  '#7ee787', // light green
+  '#ff7b72', // salmon
+  '#d2a8ff', // light purple
+  '#ffa198', // pink
+  '#a5d6ff', // pale blue
+  '#56d364', // bright green
+  '#ff9492', // light red
+  '#e0b8ff', // pale purple
+  '#9ca3af', // gray
+  '#ffb757', // yellow orange
+  '#80cbc4', // light teal
+];
 
 // Global parser instance and initialization state
 let parserInstance: any = null;
@@ -122,6 +162,12 @@ function syntaxNodeToTreeNode(node: any): TreeNode {
     children.push(syntaxNodeToTreeNode(node.child(i)));
   }
 
+  // Determine node classification
+  const isError = node.type === 'ERROR';
+  const isMissing = node.isMissing;
+  const isNamed = node.isNamed;
+  const isAnonymous = !isNamed;
+
   return {
     type: node.type,
     text: node.text,
@@ -134,6 +180,13 @@ function syntaxNodeToTreeNode(node: any): TreeNode {
       column: node.endPosition.column,
     },
     children: children.length > 0 ? children : undefined,
+    // Enhanced fields
+    id: node.id,
+    fieldName: node.currentFieldName,
+    isNamed,
+    isMissing,
+    isError,
+    isAnonymous,
   };
 }
 
@@ -233,6 +286,19 @@ export function getNodeAtPosition(tree: TreeNode, row: number, column: number): 
   }
 
   return tree;
+}
+
+/**
+ * Get color for a capture name based on theme
+ */
+export function getColorForCaptureName(
+  captureName: string,
+  captureNames: string[],
+  isDark: boolean = false
+): string {
+  const id = captureNames.indexOf(captureName);
+  const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
+  return colors[id % colors.length];
 }
 
 /**
