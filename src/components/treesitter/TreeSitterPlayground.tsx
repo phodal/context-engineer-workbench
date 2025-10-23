@@ -5,21 +5,20 @@ import CodeEditor from './CodeEditor';
 import TreeViewer from './TreeViewer';
 import QueryEditor from './QueryEditor';
 import LanguageSelector from './LanguageSelector';
-import QueryResults from './QueryResults';
 import {
   parseCode,
   queryTreeWithCode,
   treeToJSON,
-  type QueryMatch,
+  getColorForCaptureName,
   type TreeNode,
 } from '@/lib/treesitter-utils';
+import type { Highlight } from './CodeEditor';
 
 export default function TreeSitterPlayground() {
   const [language, setLanguage] = useState('javascript');
   const [code, setCode] = useState('function hello() {\n  console.log("Hello, World!");\n}');
   const [query, setQuery] = useState('');
   const [tree, setTree] = useState<TreeNode | null>(null);
-  const [queryResults, setQueryResults] = useState<QueryMatch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showQuery, setShowQuery] = useState(true);
@@ -35,6 +34,7 @@ export default function TreeSitterPlayground() {
     | undefined
   >();
   const [captureNames, setCaptureNames] = useState<string[]>([]);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
 
   // Parse code when it changes
   useEffect(() => {
@@ -45,7 +45,6 @@ export default function TreeSitterPlayground() {
         const treeJson = treeToJSON(parsedTree.rootNode);
         setTree(treeJson);
         setError(null);
-        setQueryResults([]);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Parse error');
         setTree(null);
@@ -62,29 +61,43 @@ export default function TreeSitterPlayground() {
   useEffect(() => {
     const executeQuery = async () => {
       if (!query.trim()) {
-        setQueryResults([]);
         setCaptureNames([]);
+        setHighlights([]);
         return;
       }
 
       try {
         setIsLoading(true);
         const results = await queryTreeWithCode(code, query, language);
-        setQueryResults(results);
         setError(null);
 
         // Extract unique capture names from results
         const names = new Set<string>();
+        const highlightsList: Highlight[] = [];
+
         results.forEach((match) => {
           match.captures.forEach((capture) => {
             names.add(capture.name);
+
+            // Create highlight for each capture
+            const color = getColorForCaptureName(capture.name, Array.from(names), false);
+            highlightsList.push({
+              startRow: capture.startPosition.row,
+              startColumn: capture.startPosition.column,
+              endRow: capture.endPosition.row,
+              endColumn: capture.endPosition.column,
+              color,
+              captureName: capture.name,
+            });
           });
         });
+
         setCaptureNames(Array.from(names));
+        setHighlights(highlightsList);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Query error');
-        setQueryResults([]);
         setCaptureNames([]);
+        setHighlights([]);
       } finally {
         setIsLoading(false);
       }
@@ -105,15 +118,6 @@ export default function TreeSitterPlayground() {
       endRow: node.endPosition.row,
       endColumn: node.endPosition.column,
     });
-  };
-
-  const handleCaptureClick = (capture: {
-    startRow: number;
-    startColumn: number;
-    endRow: number;
-    endColumn: number;
-  }) => {
-    setSelectedRange(capture);
   };
 
   return (
@@ -169,19 +173,19 @@ export default function TreeSitterPlayground() {
               language={language}
               isLoading={isLoading}
               selectedRange={selectedRange}
+              highlights={highlights}
             />
           </div>
 
-          {/* Right Panel - Tree Viewer or Query */}
+          {/* Right Panel - Query Editor */}
           <div className="flex flex-col gap-6">
-            <QueryEditor value={query} onChange={setQuery} />
-            {query && queryResults.length > 0 && (
-              <QueryResults
-                results={queryResults}
-                captureNames={captureNames}
-                onCaptureClick={handleCaptureClick}
-              />
-            )}
+            <QueryEditor
+              value={query}
+              onChange={setQuery}
+              captureNames={captureNames}
+              code={code}
+              language={language}
+            />
           </div>
         </div>
 
