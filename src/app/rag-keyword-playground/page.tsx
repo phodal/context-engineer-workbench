@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
+import PageHeader from '@/components/layout/PageHeader';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
 import ResultsPanel from '@/components/rag-playground/ResultsPanel';
 import PipelineWithPapers from '@/components/rag-playground/PipelineWithPapers';
@@ -171,45 +173,41 @@ export default function RAGKeywordPlaygroundPage() {
   }, [rewriteResult, searchResults, userQuery]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">RAG Keyword Search Playground</h1>
-          <p className="text-slate-600">Learn how keyword-based retrieval works in RAG systems</p>
-        </div>
-      </header>
+    <AppLayout>
+      <PageHeader
+        title="RAG Keyword Search Playground"
+        description="Learn how keyword-based retrieval works in RAG systems"
+        flowDescription="Query → Rewrite → Keyword Search → BM25 Scoring → Results"
+        breadcrumbs={[{ name: 'RAG Playground' }, { name: 'Keyword Search' }]}
+      />
 
-      {/* Main Content - Vertical Layout */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* Top: Pipeline with Papers */}
-          <PipelineWithPapers
-            rewriteResult={rewriteResult}
-            searchResultsCount={searchResults.length}
-            executionStatus={executionResult.status}
-          />
+      <div className="space-y-8">
+        {/* Top: Pipeline with Papers */}
+        <PipelineWithPapers
+          rewriteResult={rewriteResult}
+          searchResultsCount={searchResults.length}
+          executionStatus={executionResult.status}
+        />
 
-          {/* Middle: Interaction Panel */}
-          <InteractionPanel
-            userQuery={userQuery}
-            onQueryChange={setUserQuery}
-            onRewrite={handleQueryRewrite}
-            rewriteResult={rewriteResult}
-            tokenCosts={tokenCosts}
-            isLoading={isLoading}
-          />
+        {/* Middle: Interaction Panel */}
+        <InteractionPanel
+          userQuery={userQuery}
+          onQueryChange={setUserQuery}
+          onRewrite={handleQueryRewrite}
+          rewriteResult={rewriteResult}
+          tokenCosts={tokenCosts}
+          isLoading={isLoading}
+        />
 
-          {/* Bottom: Results Panel */}
-          <ResultsPanel
-            rewriteResult={rewriteResult}
-            searchResults={searchResults}
-            executionResult={executionResult}
-            onExecute={handleExecute}
-            isLoading={isLoading}
-          />
-        </div>
-      </main>
-    </div>
+        {/* Bottom: Results Panel */}
+        <ResultsPanel
+          rewriteResult={rewriteResult}
+          searchResults={searchResults}
+          executionResult={executionResult}
+          onExecute={handleExecute}
+          isLoading={isLoading}
+        />
+      </div>
+    </AppLayout>
   );
 }

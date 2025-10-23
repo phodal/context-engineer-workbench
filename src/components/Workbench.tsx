@@ -2,61 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
-import Header from './layout/Header';
-import ConfigPanel from './panels/ConfigPanel';
 import ContextAssemblyView from './panels/ContextAssemblyView';
 import InteractionPanel from './panels/InteractionPanel';
 import EvaluationPanel from './panels/EvaluationPanel';
+import { useWorkbench } from './WorkbenchProvider';
 import type { APIMetrics } from '@/lib/metrics';
 
-interface WorkbenchConfig {
-  model: string;
-  provider: string;
-  temperature: number;
-  maxTokens: number;
-  streamResponses: boolean;
-  enableRAG: boolean;
-  enableMemory: boolean;
-  enableTools: boolean;
-  enableAdvancedPrompting: boolean;
-  ragConfig: {
-    chunkSize: number;
-    chunkOverlap: number;
-    topK: number;
-    similarityThreshold: number;
-    searchMode: 'semantic' | 'keyword' | 'hybrid';
-  };
-  memoryConfig: {
-    enableChatHistory: boolean;
-    historyLength: number;
-    enableUserProfile: boolean;
-  };
-}
-
 export default function Workbench() {
-  const [config, setConfig] = useState<WorkbenchConfig>({
-    model: 'deepseek-chat',
-    provider: 'DeepSeek',
-    temperature: 0.7,
-    maxTokens: 2000,
-    streamResponses: true,
-    enableRAG: false,
-    enableMemory: false,
-    enableTools: false,
-    enableAdvancedPrompting: false,
-    ragConfig: {
-      chunkSize: 500,
-      chunkOverlap: 50,
-      topK: 3,
-      similarityThreshold: 0.7,
-      searchMode: 'semantic',
-    },
-    memoryConfig: {
-      enableChatHistory: true,
-      historyLength: 10,
-      enableUserProfile: false,
-    },
-  });
+  const { config } = useWorkbench();
 
   const [trace] = useState<
     Array<{
@@ -195,23 +148,7 @@ export default function Workbench() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, status]);
 
-  const updateConfig = (updates: Partial<WorkbenchConfig>) => {
-    setConfig((prev) => ({ ...prev, ...updates }));
-  };
 
-  const updateRAGConfig = (updates: Partial<WorkbenchConfig['ragConfig']>) => {
-    setConfig((prev) => ({
-      ...prev,
-      ragConfig: { ...prev.ragConfig, ...updates },
-    }));
-  };
-
-  const updateMemoryConfig = (updates: Partial<WorkbenchConfig['memoryConfig']>) => {
-    setConfig((prev) => ({
-      ...prev,
-      memoryConfig: { ...prev.memoryConfig, ...updates },
-    }));
-  };
 
   // Build context for visualization
   const context = {
@@ -231,44 +168,30 @@ export default function Workbench() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div className="h-full flex overflow-hidden bg-gray-50">
+      {/* Middle Panel - Split vertically */}
+      <div className="flex-1 flex flex-col">
+        {/* Top: Context Assembly View */}
+        <div className="flex-1 border-b border-gray-200 overflow-y-auto">
+          <ContextAssemblyView context={context} config={config} />
+        </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Config Center */}
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <ConfigPanel
-            config={config}
-            onConfigChange={updateConfig as (updates: unknown) => void}
-            onRAGConfigChange={updateRAGConfig as (updates: unknown) => void}
-            onMemoryConfigChange={updateMemoryConfig as (updates: unknown) => void}
+        {/* Bottom: Interaction Panel */}
+        <div className="flex-1 overflow-y-auto">
+          <InteractionPanel
+            messages={messages}
+            input={input}
+            isLoading={isLoading}
+            error={error}
+            onInputChange={handleInputChange}
+            onSubmit={handleSubmit as (e: unknown) => void}
           />
         </div>
+      </div>
 
-        {/* Middle Panel - Split vertically */}
-        <div className="flex-1 flex flex-col">
-          {/* Top: Context Assembly View */}
-          <div className="flex-1 border-b border-gray-200 overflow-y-auto">
-            <ContextAssemblyView context={context} config={config} />
-          </div>
-
-          {/* Bottom: Interaction Panel */}
-          <div className="flex-1 overflow-y-auto">
-            <InteractionPanel
-              messages={messages}
-              input={input}
-              isLoading={isLoading}
-              error={error}
-              onInputChange={handleInputChange}
-              onSubmit={handleSubmit as (e: unknown) => void}
-            />
-          </div>
-        </div>
-
-        {/* Right Panel - Evaluation */}
-        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
-          <EvaluationPanel messages={messages} trace={trace} metrics={metrics} />
-        </div>
+      {/* Right Panel - Evaluation */}
+      <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+        <EvaluationPanel messages={messages} trace={trace} metrics={metrics} />
       </div>
     </div>
   );

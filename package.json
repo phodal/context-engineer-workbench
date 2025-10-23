@@ -37,6 +37,7 @@
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
+    "@heroicons/react": "^2.2.0",
     "@langchain/community": "^1.0.0",
     "@langchain/core": "^1.0.1",
     "@langchain/textsplitters": "^1.0.0",

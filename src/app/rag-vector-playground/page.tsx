@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
+import PageHeader from '@/components/layout/PageHeader';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
 import VectorSearchResultsPanel from '@/components/rag-playground/VectorSearchResultsPanel';
 import PipelineWithPapers from '@/components/rag-playground/PipelineWithPapers';
@@ -232,92 +234,83 @@ export default function RAGVectorPlaygroundPage() {
   }, [queryEmbedding, searchResults, userQuery]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">RAG Vector Search Playground</h1>
-          <p className="text-slate-600">
-            Learn how vector-based semantic search works in RAG systems with GLM Embedding-3 & RXDB
-          </p>
-          <p className="text-sm text-slate-500 mt-2">
-            Flow: Query → Generate Candidates → Generate Embeddings → Cosine Similarity
-          </p>
-        </div>
-      </header>
+    <AppLayout>
+      <PageHeader
+        title="RAG Vector Search Playground"
+        description="Learn how vector-based semantic search works in RAG systems with GLM Embedding-3 & RXDB"
+        flowDescription="Query → Generate Candidates → Generate Embeddings → Cosine Similarity"
+        breadcrumbs={[{ name: 'RAG Playground' }, { name: 'Vector Search' }]}
+      />
 
-      {/* Main Content - Vertical Layout */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* Top: Pipeline with Papers */}
-          <PipelineWithPapers
-            rewriteResult={
-              queryEmbedding
-                ? {
-                    original: queryEmbedding.text,
-                    rewritten: `Embedding: [${queryEmbedding.embedding
-                      .slice(0, 3)
-                      .map((v) => v.toFixed(3))
-                      .join(', ')}...]`,
-                    technique: 'GLM Embedding-3',
-                  }
-                : null
-            }
-            searchResultsCount={searchResults.length}
-            executionStatus={executionResult.status}
-          />
+      <div className="space-y-8">
+        {/* Top: Pipeline with Papers */}
+        <PipelineWithPapers
+          rewriteResult={
+            queryEmbedding
+              ? {
+                  original: queryEmbedding.text,
+                  rewritten: `Embedding: [${queryEmbedding.embedding
+                    .slice(0, 3)
+                    .map((v) => v.toFixed(3))
+                    .join(', ')}...]`,
+                  technique: 'GLM Embedding-3',
+                }
+              : null
+          }
+          searchResultsCount={searchResults.length}
+          executionStatus={executionResult.status}
+        />
 
-          {/* Middle: Interaction Panel */}
-          <InteractionPanel
-            userQuery={userQuery}
-            onQueryChange={setUserQuery}
-            onRewrite={handleQueryEmbedding}
-            rewriteResult={
-              queryEmbedding
-                ? {
-                    original: queryEmbedding.text,
-                    rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 30).join(', ')}...]`,
-                    technique: 'GLM Embedding-3',
-                    timestamp: Date.now(),
-                  }
-                : null
-            }
-            tokenCosts={tokenCosts}
-            isLoading={isLoading}
-          />
+        {/* Middle: Interaction Panel */}
+        <InteractionPanel
+          userQuery={userQuery}
+          onQueryChange={setUserQuery}
+          onRewrite={handleQueryEmbedding}
+          rewriteResult={
+            queryEmbedding
+              ? {
+                  original: queryEmbedding.text,
+                  rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 30).join(', ')}...]`,
+                  technique: 'GLM Embedding-3',
+                  timestamp: Date.now(),
+                }
+              : null
+          }
+          tokenCosts={tokenCosts}
+          isLoading={isLoading}
+        />
 
-          {/* Candidates Section */}
-          {candidates.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-slate-200">
-                <h2 className="text-lg font-bold text-slate-900">Generated Candidates</h2>
-                <p className="text-xs text-slate-600 mt-1">
-                  AI-generated documents related to your query
-                </p>
-              </div>
-              <div className="p-6 space-y-4">
-                {candidates.map((candidate, idx) => (
-                  <div key={candidate.id} className="border border-slate-200 rounded p-4">
-                    <h3 className="font-semibold text-slate-900">
-                      {idx + 1}. {candidate.title}
-                    </h3>
-                    <p className="text-sm text-slate-600 mt-2">{candidate.content}</p>
-                  </div>
-                ))}
-              </div>
+        {/* Candidates Section */}
+        {candidates.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-slate-200">
+              <h2 className="text-lg font-bold text-slate-900">Generated Candidates</h2>
+              <p className="text-xs text-slate-600 mt-1">
+                AI-generated documents related to your query
+              </p>
             </div>
-          )}
+            <div className="p-6 space-y-4">
+              {candidates.map((candidate, idx) => (
+                <div key={candidate.id} className="border border-slate-200 rounded p-4">
+                  <h3 className="font-semibold text-slate-900">
+                    {idx + 1}. {candidate.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 mt-2">{candidate.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-          {/* Bottom: Vector Search Results Panel */}
-          <VectorSearchResultsPanel
-            searchResults={searchResults}
-            executionResult={executionResult}
-            onExecute={handleExecute}
-            isLoading={isLoading}
-          />
-        </div>
-      </main>
-    </div>
+        {/* Bottom: Vector Search Results Panel */}
+        <VectorSearchResultsPanel
+          searchResults={searchResults}
+          executionResult={executionResult}
+          onExecute={handleExecute}
+          isLoading={isLoading}
+        />
+      </div>
+    </AppLayout>
   );
 }
 

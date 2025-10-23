@@ -71,6 +71,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.38.6
         version: 6.38.6
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.1.0)
       '@langchain/community':
         specifier: ^1.0.0
         version: 1.0.0(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@browserbasehq/stagehand@1.14.0(@playwright/test@1.56.1)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@6.6.0(ws@8.18.3)(zod@3.25.76))(zod@3.25.76))(@ibm-cloud/watsonx-ai@1.7.0)(@langchain/core@1.0.1(@opentelemetry/api@1.9.0)(openai@6.6.0(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(crypto-js@4.2.0)(ibm-cloud-sdk-core@5.4.3)(ignore@5.3.2)(jsonwebtoken@9.0.2)(openai@6.6.0(ws@8.18.3)(zod@3.25.76))(playwright@1.56.1)(ws@8.18.3)
@@ -769,6 +772,11 @@ packages:
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@heroicons/react@2.2.0':
+    resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
+    peerDependencies:
+      react: '>= 16 || ^19.0.0-rc'
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -5951,6 +5959,10 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.4
       yargs: 17.7.2
+
+  '@heroicons/react@2.2.0(react@19.1.0)':
+    dependencies:
+      react: 19.1.0
 
   '@humanfs/core@0.19.1': {}
 

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
+import PageHeader from '@/components/layout/PageHeader';
 import D3GraphVisualization from '@/components/graph-search/D3GraphVisualization';
 import CodeEditor, { Highlight } from '@/components/treesitter/CodeEditor';
 import GraphDataInspector from '@/components/debug/GraphDataInspector';
@@ -166,125 +168,115 @@ export default function RAGGraphPlaygroundPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">RAG Graph Search Playground</h1>
-          <p className="text-slate-600">
-            Visualize code relationships using TreeSitter and Graph Analysis
-          </p>
-          <p className="text-sm text-slate-500 mt-2">
-            Flow: Code → Parse with TreeSitter → Extract Definitions & References → Build Graph →
-            Visualize
-          </p>
-        </div>
-      </header>
+    <AppLayout>
+      <PageHeader
+        title="RAG Graph Search Playground"
+        description="Visualize code relationships using TreeSitter and Graph Analysis"
+        flowDescription="Code → Parse with TreeSitter → Extract Definitions & References → Build Graph → Visualize"
+        breadcrumbs={[{ name: 'RAG Playground' }, { name: 'Graph Search' }]}
+      />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* Code Editor Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Code Editor */}
-            <div className="lg:col-span-3">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Language</label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="javascript">JavaScript</option>
-                    <option value="typescript">TypeScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                    <option value="rust">Rust</option>
-                  </select>
-                </div>
-
-                <div className="h-96">
-                  <CodeEditor
-                    value={code}
-                    onChange={setCode}
-                    language={language}
-                    isLoading={isLoading}
-                    highlights={highlights}
-                  />
-                </div>
-
-                <button
-                  onClick={handleBuildGraph}
-                  disabled={isLoading || !code.trim()}
-                  className="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+      <div className="space-y-8">
+        {/* Code Editor Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Code Editor */}
+          <div className="lg:col-span-3">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Language</label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {isLoading ? (
-                    <>
-                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Building Graph...
-                    </>
-                  ) : (
-                    <>
-                      <span>🔗</span>
-                      Build Graph
-                    </>
-                  )}
-                </button>
+                  <option value="javascript">JavaScript</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="rust">Rust</option>
+                </select>
+              </div>
 
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-sm text-red-700 font-semibold">Error</p>
-                    <p className="text-xs text-red-600 mt-1">{error}</p>
-                  </div>
+              <div className="h-96">
+                <CodeEditor
+                  value={code}
+                  onChange={setCode}
+                  language={language}
+                  isLoading={isLoading}
+                  highlights={highlights}
+                />
+              </div>
+
+              <button
+                onClick={handleBuildGraph}
+                disabled={isLoading || !code.trim()}
+                className="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Building Graph...
+                  </>
+                ) : (
+                  <>
+                    <span>🔗</span>
+                    Build Graph
+                  </>
                 )}
-              </div>
-            </div>
+              </button>
 
-            {/* Graph Statistics Sidebar */}
-            {graphData && (
-              <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden h-fit">
-                <div className="bg-linear-to-r from-green-50 to-green-100 px-6 py-4 border-b border-slate-200">
-                  <h2 className="text-lg font-bold text-slate-900">Statistics</h2>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-700 font-semibold">Error</p>
+                  <p className="text-xs text-red-600 mt-1">{error}</p>
                 </div>
-                <div className="p-6 space-y-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {graphData.metadata.totalNodes}
-                    </p>
-                    <p className="text-xs text-slate-600 mt-1">Nodes</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">
-                      {graphData.metadata.totalEdges}
-                    </p>
-                    <p className="text-xs text-slate-600 mt-1">Edges</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">
-                      {graphData.metadata.totalEdges > 0
-                        ? (graphData.metadata.totalEdges / graphData.metadata.totalNodes).toFixed(2)
-                        : '0'}
-                    </p>
-                    <p className="text-xs text-slate-600 mt-1">Avg Connections</p>
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Debug Inspector */}
-          {/*<GraphDataInspector data={graphData} />*/}
-
-          {/* Graph Visualization */}
-          <D3GraphVisualization
-            data={graphData}
-            isLoading={isLoading}
-            onNodeSelect={handleNodeSelect}
-            onHighlightCode={handleHighlightCode}
-          />
+          {/* Graph Statistics Sidebar */}
+          {graphData && (
+            <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden h-fit">
+              <div className="bg-linear-to-r from-green-50 to-green-100 px-6 py-4 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-900">Statistics</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-600">
+                    {graphData.metadata.totalNodes}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1">Nodes</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {graphData.metadata.totalEdges}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1">Edges</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    {graphData.metadata.totalEdges > 0
+                      ? (graphData.metadata.totalEdges / graphData.metadata.totalNodes).toFixed(2)
+                      : '0'}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1">Avg Connections</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
-    </div>
+
+        {/* Debug Inspector */}
+        {/*<GraphDataInspector data={graphData} />*/}
+
+        {/* Graph Visualization */}
+        <D3GraphVisualization
+          data={graphData}
+          isLoading={isLoading}
+          onNodeSelect={handleNodeSelect}
+          onHighlightCode={handleHighlightCode}
+        />
+      </div>
+    </AppLayout>
   );
 }
