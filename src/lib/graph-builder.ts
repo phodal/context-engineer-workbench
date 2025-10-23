@@ -5,18 +5,21 @@
 
 import Graph from 'graphology';
 import { parseCode, TreeNode } from './treesitter-utils';
+import { getLanguageParser, ReferenceInfo } from './language-parsers';
 
 export interface NodeAttributes {
   label: string;
   type: string;
   size?: number;
   color?: string;
+  parent?: string; // Track parent node for hierarchical relationships
   metadata?: Record<string, unknown>;
 }
 
 export interface EdgeAttributes {
   type: string;
   weight?: number;
+  originalCaller?: string; // Track the original caller for detailed analysis
 }
 
 export type CodeGraph = Graph<NodeAttributes, EdgeAttributes>;
@@ -39,30 +42,21 @@ export interface GraphData {
 }
 
 /**
- * Extract function/class definitions from AST
+ * Extract function/class definitions from AST using language-specific parser
  */
 function extractDefinitions(
   node: TreeNode | null,
   language: string,
-  definitions: Map<string, NodeAttributes> = new Map()
+  definitions: Map<string, NodeAttributes> = new Map(),
+  parentContext: string | null = null
 ): Map<string, NodeAttributes> {
   if (!node) return definitions;
 
-  // Language-specific patterns for definitions
-  const patterns: Record<string, string[]> = {
-    javascript: ['function_declaration', 'class_declaration', 'arrow_function'],
-    typescript: [
-      'function_declaration',
-      'class_declaration',
-      'interface_declaration',
-      'type_alias_declaration',
-    ],
-    python: ['function_definition', 'class_definition'],
-    java: ['method_declaration', 'class_declaration'],
-    rust: ['function_item', 'struct_item', 'impl_item'],
-  };
+  // Get language-specific parser
+  const parser = getLanguageParser(language);
+  const langPatterns = parser.getDefinitionNodeTypes();
 
-  const langPatterns = patterns[language] || patterns.javascript;
+  let currentContext = parentContext;
 
   if (node.isNamed && langPatterns.includes(node.type)) {
     // Extract name from node
@@ -82,6 +76,7 @@ function extractDefinitions(
         label: name,
         type: node.type,
         size: 10,
+        parent: parentContext || undefined, // Track parent relationship
         metadata: {
           startLine: node.startPosition.row,
           endLine: node.endPosition.row,
@@ -91,12 +86,15 @@ function extractDefinitions(
         },
       });
     }
+
+    // Update current context for children
+    currentContext = id;
   }
 
-  // Recursively process children
+  // Recursively process children with updated context
   if (node.children) {
     for (const child of node.children) {
-      extractDefinitions(child, language, definitions);
+      extractDefinitions(child, language, definitions, currentContext);
     }
   }
 
@@ -104,38 +102,23 @@ function extractDefinitions(
 }
 
 /**
- * Extract function calls and references with context awareness
+ * Extract function calls and references with context awareness using language-specific parsers
  */
 function extractReferences(
   node: TreeNode | null,
   language: string,
-  references: Array<{ caller: string; callee: string; type: string }> = [],
+  references: ReferenceInfo[] = [],
   currentContext: string = 'global'
-): Array<{ caller: string; callee: string; type: string }> {
+): ReferenceInfo[] {
   if (!node) return references;
+
+  // Get language-specific parser
+  const parser = getLanguageParser(language);
 
   // Update context if we're entering a function or method
   let context = currentContext;
   if (node.isNamed) {
-    const patterns: Record<string, string[]> = {
-      javascript: [
-        'function_declaration',
-        'class_declaration',
-        'arrow_function',
-        'method_definition',
-      ],
-      typescript: [
-        'function_declaration',
-        'class_declaration',
-        'method_definition',
-        'interface_declaration',
-      ],
-      python: ['function_definition', 'class_definition'],
-      java: ['method_declaration', 'class_declaration'],
-      rust: ['function_item', 'struct_item', 'impl_item'],
-    };
-
-    const langPatterns = patterns[language] || patterns.javascript;
+    const langPatterns = parser.getContextNodeTypes();
 
     if (langPatterns.includes(node.type)) {
       // Extract name from node
@@ -152,41 +135,13 @@ function extractReferences(
     }
   }
 
-  // Detect function calls
-  if (node.type === 'call_expression' && node.children) {
-    const funcNode = node.children[0];
-    if (funcNode && funcNode.type === 'identifier') {
-      references.push({
-        caller: context,
-        callee: funcNode.text,
-        type: 'call',
-      });
-    }
-  }
+  // Use language-specific parsers to extract different types of references
+  const instantiations = parser.extractInstantiations(node, context);
+  const calls = parser.extractCalls(node, context);
+  const memberAccess = parser.extractMemberAccess(node, context);
 
-  // Detect class instantiation (new expression)
-  if (node.type === 'new_expression' && node.children) {
-    const classNode = node.children.find((child) => child.type === 'identifier');
-    if (classNode) {
-      references.push({
-        caller: context,
-        callee: classNode.text,
-        type: 'instantiation',
-      });
-    }
-  }
-
-  // Detect member expressions (method calls like obj.method())
-  if (node.type === 'member_expression' && node.children) {
-    const propertyNode = node.children[node.children.length - 1];
-    if (propertyNode && propertyNode.type === 'identifier') {
-      references.push({
-        caller: context,
-        callee: propertyNode.text,
-        type: 'method_call',
-      });
-    }
-  }
+  // Add all extracted references
+  references.push(...instantiations, ...calls, ...memberAccess);
 
   // Recursively process children with updated context
   if (node.children) {
@@ -221,33 +176,70 @@ export async function buildCodeGraph(code: string, language: string): Promise<Co
     // Extract references (calls, instantiations, etc.)
     const references = extractReferences(rootNode, language, [], 'global');
 
-    // Add edges to graph
+    // Add edges to graph with improved target resolution and parent context handling
     references.forEach((ref) => {
-      // Try to find the target node
+      // Try to find the target node using metadata hints
       let targetId: string | null = null;
 
-      // First try exact match with type prefix
-      const exactTargetId = `${ref.type}:${ref.callee}`;
-      if (definitions.has(exactTargetId)) {
-        targetId = exactTargetId;
-      } else {
-        // Try to find by class_declaration or function_declaration
-        const classTargetId = `class_declaration:${ref.callee}`;
-        const funcTargetId = `function_declaration:${ref.callee}`;
-
-        if (definitions.has(classTargetId)) {
-          targetId = classTargetId;
-        } else if (definitions.has(funcTargetId)) {
-          targetId = funcTargetId;
+      // Use metadata to determine the expected target type
+      const expectedTargetType = ref.metadata?.targetType as string;
+      if (expectedTargetType) {
+        const targetWithType = `${expectedTargetType}:${ref.callee}`;
+        if (definitions.has(targetWithType)) {
+          targetId = targetWithType;
         }
       }
 
-      // Only add edge if both caller and target exist in definitions
-      if (targetId && (definitions.has(ref.caller) || ref.caller === 'global')) {
-        graph.addEdge(ref.caller, targetId, {
-          type: ref.type,
-          weight: 1,
+      // Fallback: try common patterns
+      if (!targetId) {
+        const commonTargets = [
+          `class_declaration:${ref.callee}`,
+          `function_declaration:${ref.callee}`,
+          `method_declaration:${ref.callee}`,
+          `function_definition:${ref.callee}`,
+          `class_definition:${ref.callee}`,
+          `method_definition:${ref.callee}`,
+        ];
+
+        for (const target of commonTargets) {
+          if (definitions.has(target)) {
+            targetId = target;
+            break;
+          }
+        }
+      }
+
+      // Determine the source node for the edge
+      let sourceId = ref.caller;
+
+      // If the caller is a method, we might want to show the relationship from the parent class
+      if (definitions.has(ref.caller)) {
+        const callerDef = definitions.get(ref.caller);
+
+        // For instantiation relationships, show from the parent class if it exists
+        if (
+          ref.type === 'instantiation' &&
+          callerDef?.parent &&
+          callerDef.type === 'method_definition'
+        ) {
+          sourceId = callerDef.parent;
+        }
+      }
+
+      // Only add edge if both source and target exist in definitions
+      if (targetId && (definitions.has(sourceId) || sourceId === 'global')) {
+        // Check if edge already exists to avoid duplicates
+        const existingEdge = graph.edges().find((edgeId) => {
+          return graph.source(edgeId) === sourceId && graph.target(edgeId) === targetId;
         });
+
+        if (!existingEdge) {
+          graph.addEdge(sourceId, targetId, {
+            type: ref.type,
+            weight: 1,
+            originalCaller: ref.caller, // Keep track of the original caller
+          });
+        }
       }
     });
 

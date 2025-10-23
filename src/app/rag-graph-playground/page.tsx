@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import D3GraphVisualization from '@/components/graph-search/D3GraphVisualization';
 import CodeEditor, { Highlight } from '@/components/treesitter/CodeEditor';
+import GraphDataInspector from '@/components/debug/GraphDataInspector';
 import {
   buildCodeGraph,
   colorizeGraph,
@@ -271,6 +272,9 @@ export default function RAGGraphPlaygroundPage() {
               </div>
             )}
           </div>
+
+          {/* Debug Inspector */}
+          {/*<GraphDataInspector data={graphData} />*/}
 
           {/* Graph Visualization */}
           <D3GraphVisualization
