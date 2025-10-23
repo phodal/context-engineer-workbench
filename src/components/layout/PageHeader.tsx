@@ -22,7 +22,7 @@ export default function PageHeader({
   description,
   flowDescription,
   breadcrumbs,
-  actions
+  actions,
 }: PageHeaderProps) {
   return (
     <div className="bg-white border-b border-slate-200 sticky top-16 z-40 shadow-sm">
@@ -41,13 +41,9 @@ export default function PageHeader({
               </p>
             )}
           </div>
-          
+
           {/* Actions */}
-          {actions && (
-            <div className="ml-6 flex-shrink-0">
-              {actions}
-            </div>
-          )}
+          {actions && <div className="ml-6 flex-shrink-0">{actions}</div>}
         </div>
       </div>
     </div>

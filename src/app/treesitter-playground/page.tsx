@@ -31,10 +31,7 @@ export default function TreeSitterPlaygroundPage() {
         title="TreeSitter Playground"
         description="Parse and analyze code structure using TreeSitter"
         flowDescription="Code → TreeSitter Parser → AST → Syntax Highlighting & Analysis"
-        breadcrumbs={[
-          { name: 'Code Analysis' },
-          { name: 'TreeSitter' }
-        ]}
+        breadcrumbs={[{ name: 'Code Analysis' }, { name: 'TreeSitter' }]}
       />
       <TreeSitterPlayground />
     </AppLayout>

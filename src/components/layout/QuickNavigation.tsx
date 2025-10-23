@@ -18,36 +18,36 @@ const navigationItems: NavItem[] = [
     href: '/',
     description: 'Main context engineering workbench',
     icon: '🔧',
-    keywords: ['workbench', 'main', 'home', 'context', 'engineering']
+    keywords: ['workbench', 'main', 'home', 'context', 'engineering'],
   },
   {
     name: 'Keyword Search',
     href: '/rag-keyword-playground',
     description: 'Learn keyword-based retrieval',
     icon: '🔍',
-    keywords: ['keyword', 'search', 'rag', 'bm25', 'retrieval']
+    keywords: ['keyword', 'search', 'rag', 'bm25', 'retrieval'],
   },
   {
     name: 'Vector Search',
     href: '/rag-vector-playground',
     description: 'Explore semantic vector search',
     icon: '🎯',
-    keywords: ['vector', 'semantic', 'embedding', 'similarity', 'cosine']
+    keywords: ['vector', 'semantic', 'embedding', 'similarity', 'cosine'],
   },
   {
     name: 'Graph Search',
     href: '/rag-graph-playground',
     description: 'Visualize code relationships',
     icon: '🕸️',
-    keywords: ['graph', 'code', 'relationships', 'visualization', 'treesitter']
+    keywords: ['graph', 'code', 'relationships', 'visualization', 'treesitter'],
   },
   {
     name: 'TreeSitter',
     href: '/treesitter-playground',
     description: 'Parse and analyze code structure',
     icon: '🌳',
-    keywords: ['treesitter', 'parser', 'ast', 'syntax', 'code']
-  }
+    keywords: ['treesitter', 'parser', 'ast', 'syntax', 'code'],
+  },
 ];
 
 interface QuickNavigationProps {
@@ -61,12 +61,12 @@ export default function QuickNavigation({ isOpen, onClose }: QuickNavigationProp
   const router = useRouter();
 
   // Filter items based on query
-  const filteredItems = navigationItems.filter(item => {
+  const filteredItems = navigationItems.filter((item) => {
     const searchText = query.toLowerCase();
     return (
       item.name.toLowerCase().includes(searchText) ||
       item.description.toLowerCase().includes(searchText) ||
-      item.keywords.some(keyword => keyword.includes(searchText))
+      item.keywords.some((keyword) => keyword.includes(searchText))
     );
   });
 
@@ -83,11 +83,11 @@ export default function QuickNavigation({ isOpen, onClose }: QuickNavigationProp
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => (prev + 1) % filteredItems.length);
+          setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => (prev - 1 + filteredItems.length) % filteredItems.length);
+          setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
           break;
         case 'Enter':
           e.preventDefault();
@@ -120,11 +120,8 @@ export default function QuickNavigation({ isOpen, onClose }: QuickNavigationProp
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
-        onClick={onClose}
-      />
-      
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={onClose} />
+
       {/* Modal */}
       <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-lg z-50">
         <div className="bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden">
@@ -175,7 +172,7 @@ export default function QuickNavigation({ isOpen, onClose }: QuickNavigationProp
             ) : (
               <div className="px-4 py-8 text-center text-slate-500">
                 <MagnifyingGlassIcon className="h-8 w-8 mx-auto mb-2 text-slate-300" />
-                <p>No pages found for "{query}"</p>
+                <p>No pages found for &quot;{query}&quot;</p>
               </div>
             )}
           </div>

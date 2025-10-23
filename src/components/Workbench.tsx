@@ -148,8 +148,6 @@ export default function Workbench() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, status]);
 
-
-
   // Build context for visualization
   const context = {
     systemPrompt: 'You are a helpful AI assistant specialized in context engineering.',
