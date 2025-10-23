@@ -8,20 +8,16 @@
 // Language grammar URLs mapping
 const LANGUAGE_URLS: Record<string, string> = {
   javascript:
-    'https://cdn.jsdelivr.net/npm/tree-sitter-javascript@0.23.1/tree-sitter-javascript.wasm',
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-javascript.wasm',
   typescript:
-    'https://cdn.jsdelivr.net/npm/tree-sitter-typescript@0.21.0/tree-sitter-typescript.wasm',
-  python: 'https://cdn.jsdelivr.net/npm/tree-sitter-python@0.23.0/tree-sitter-python.wasm',
-  java: 'https://cdn.jsdelivr.net/npm/tree-sitter-java@0.21.0/tree-sitter-java.wasm',
-  cpp: 'https://cdn.jsdelivr.net/npm/tree-sitter-cpp@0.23.0/tree-sitter-cpp.wasm',
-  c: 'https://cdn.jsdelivr.net/npm/tree-sitter-c@0.21.0/tree-sitter-c.wasm',
-  go: 'https://cdn.jsdelivr.net/npm/tree-sitter-go@0.21.0/tree-sitter-go.wasm',
-  rust: 'https://cdn.jsdelivr.net/npm/tree-sitter-rust@0.21.0/tree-sitter-rust.wasm',
-  html: 'https://cdn.jsdelivr.net/npm/tree-sitter-html@0.20.1/tree-sitter-html.wasm',
-  css: 'https://cdn.jsdelivr.net/npm/tree-sitter-css@0.21.0/tree-sitter-css.wasm',
-  json: 'https://cdn.jsdelivr.net/npm/tree-sitter-json@0.24.0/tree-sitter-json.wasm',
-  yaml: 'https://cdn.jsdelivr.net/npm/tree-sitter-yaml@0.6.0/tree-sitter-yaml.wasm',
-  bash: 'https://cdn.jsdelivr.net/npm/tree-sitter-bash@0.21.0/tree-sitter-bash.wasm',
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-typescript.wasm',
+  python:
+    'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-python.wasm',
+  java: 'https://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-java.wasm',
+  cpp: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-cpp.wasm',
+  c: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-c.wasm',
+  go: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-go.wasm',
+  rust: 'ttps://cdn.jsdelivr.net/npm/@unit-mesh/treesitter-artifacts@latest/wasm/tree-sitter-rust.wasm',
   sql: 'https://cdn.jsdelivr.net/npm/tree-sitter-sql@0.1.0/tree-sitter-sql.wasm',
 };
 
