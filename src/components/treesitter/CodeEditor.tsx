@@ -1,6 +1,19 @@
 'use client';
 
 import React, { useRef, useEffect, useMemo } from 'react';
+import { EditorView, Decoration } from '@codemirror/view';
+import { EditorState, StateField, StateEffect, RangeSet } from '@codemirror/state';
+import { javascript } from '@codemirror/lang-javascript';
+import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
+import { cpp } from '@codemirror/lang-cpp';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { json } from '@codemirror/lang-json';
+import { xml } from '@codemirror/lang-xml';
+import { sql } from '@codemirror/lang-sql';
+import { rust } from '@codemirror/lang-rust';
+import { go } from '@codemirror/lang-go';
 
 export interface Highlight {
   startRow: number;
@@ -25,158 +38,165 @@ interface CodeEditorProps {
   highlights?: Highlight[];
 }
 
+const getLanguageExtension = (lang: string) => {
+  switch (lang) {
+    case 'javascript':
+    case 'typescript':
+      return javascript({ typescript: lang === 'typescript' });
+    case 'python':
+      return python();
+    case 'java':
+      return java();
+    case 'cpp':
+    case 'c':
+      return cpp();
+    case 'html':
+      return html();
+    case 'css':
+      return css();
+    case 'json':
+      return json();
+    case 'xml':
+      return xml();
+    case 'sql':
+      return sql();
+    case 'rust':
+      return rust();
+    case 'go':
+      return go();
+    default:
+      return javascript();
+  }
+};
+
 export default function CodeEditor({
   value,
   onChange,
   language,
-  isLoading,
-  selectedRange,
   highlights = [],
 }: CodeEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<EditorView | null>(null);
 
-  // Handle selection when selectedRange changes
-  useEffect(() => {
-    if (selectedRange && textareaRef.current) {
-      // Convert row/column to character index
-      const positionToIndex = (row: number, column: number): number => {
-        const lines = value.split('\n');
-        let index = 0;
-        for (let i = 0; i < row && i < lines.length; i++) {
-          index += lines[i].length + 1; // +1 for newline
-        }
-        index += column;
-        return index;
-      };
-
-      const startIndex = positionToIndex(selectedRange.startRow, selectedRange.startColumn);
-      const endIndex = positionToIndex(selectedRange.endRow, selectedRange.endColumn);
-
-      // Set selection
-      textareaRef.current.setSelectionRange(startIndex, endIndex);
-      textareaRef.current.focus();
-
-      // Scroll into view
-      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [selectedRange, value]);
-
-  // Build highlighted lines
-  const highlightedLines = useMemo(() => {
-    const lines = value.split('\n');
-    const lineHighlights: Map<
-      number,
-      Array<{ start: number; end: number; color: string }>
-    > = new Map();
+  // Create highlight decorations
+  const highlightDecorations = useMemo(() => {
+    const decorations: Array<{ from: number; to: number; color: string }> = [];
 
     highlights.forEach((hl) => {
-      for (let row = hl.startRow; row <= hl.endRow; row++) {
-        if (!lineHighlights.has(row)) {
-          lineHighlights.set(row, []);
-        }
+      const lines = value.split('\n');
+      let from = 0;
 
-        const line = lines[row] || '';
-        const start = row === hl.startRow ? hl.startColumn : 0;
-        const end = row === hl.endRow ? hl.endColumn : line.length;
-
-        lineHighlights.get(row)!.push({ start, end, color: hl.color });
+      // Calculate character position for start
+      for (let i = 0; i < hl.startRow; i++) {
+        from += (lines[i]?.length || 0) + 1; // +1 for newline
       }
+      from += hl.startColumn;
+
+      // Calculate character position for end
+      let to = from;
+      for (let i = hl.startRow; i < hl.endRow; i++) {
+        to += (lines[i]?.length || 0) + 1;
+      }
+      to += hl.endColumn - hl.startColumn;
+
+      decorations.push({ from, to, color: hl.color });
     });
 
-    return lineHighlights;
-  }, [value, highlights]);
+    return decorations;
+  }, [highlights, value]);
 
-  // Render highlighted code
-  const renderHighlightedCode = () => {
-    const lines = value.split('\n');
-    return lines.map((line, rowIdx) => {
-      const lineHls = highlightedLines.get(rowIdx) || [];
+  // Initialize CodeMirror
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-      if (lineHls.length === 0) {
-        return (
-          <div key={rowIdx} className="font-mono text-sm">
-            {line || '\n'}
-          </div>
-        );
-      }
+    // Create highlight effect and field
+    const highlightEffect =
+      StateEffect.define<Array<{ from: number; to: number; color: string }>>();
 
-      // Sort highlights by start position
-      lineHls.sort((a, b) => a.start - b.start);
-
-      const parts: React.ReactNode[] = [];
-      let lastEnd = 0;
-
-      lineHls.forEach((hl, idx) => {
-        if (hl.start > lastEnd) {
-          parts.push(<span key={`text-${idx}`}>{line.substring(lastEnd, hl.start)}</span>);
+    const highlightField = StateField.define({
+      create() {
+        return RangeSet.empty;
+      },
+      update(decorations, tr) {
+        for (const effect of tr.effects) {
+          if (effect.is(highlightEffect)) {
+            const ranges: Array<{ from: number; to: number; value: Decoration }> = [];
+            for (const { from, to, color } of effect.value) {
+              ranges.push({
+                from,
+                to,
+                value: Decoration.mark({
+                  class: 'cm-highlight',
+                  attributes: { style: `color: ${color}; font-weight: bold;` },
+                }),
+              });
+            }
+            return RangeSet.of(ranges, true);
+          }
         }
+        return decorations.map(tr.changes);
+      },
+      provide: (f) => EditorView.decorations.from(f),
+    });
 
-        parts.push(
-          <span
-            key={`hl-${idx}`}
-            style={{
-              backgroundColor: hl.color,
-              opacity: 0.3,
-              borderRadius: '2px',
-            }}
-          >
-            {line.substring(hl.start, hl.end)}
-          </span>
-        );
+    const extensions = [
+      EditorView.theme({
+        '.cm-content': { fontSize: '14px', fontFamily: 'monospace', padding: '12px 0' },
+        '.cm-gutters': { backgroundColor: '#f5f5f5', borderRight: '1px solid #e0e0e0' },
+        '.cm-highlight': { fontWeight: 'bold' },
+      }),
+      EditorState.tabSize.of(2),
+      getLanguageExtension(language),
+      highlightField,
+    ];
 
-        lastEnd = hl.end;
+    const state = EditorState.create({
+      doc: value,
+      extensions,
+    });
+
+    const view = new EditorView({
+      state,
+      parent: containerRef.current,
+      dispatch: (tr) => {
+        view.update([tr]);
+        if (tr.docChanged) {
+          onChange(view.state.doc.toString());
+        }
+      },
+    });
+
+    // Apply highlights
+    if (highlightDecorations.length > 0) {
+      view.dispatch({
+        effects: highlightEffect.of(highlightDecorations),
       });
+    }
 
-      if (lastEnd < line.length) {
-        parts.push(<span key="text-end">{line.substring(lastEnd)}</span>);
-      }
+    editorRef.current = view;
 
-      return (
-        <div key={rowIdx} className="font-mono text-sm">
-          {parts}
-        </div>
-      );
-    });
-  };
+    return () => {
+      view.destroy();
+      editorRef.current = null;
+    };
+  }, [language, onChange, value, highlightDecorations]);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200">
+    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden flex flex-col h-full">
+      <div className="bg-linear-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">Code</h2>
         <p className="text-xs text-slate-600 mt-1">Language: {language}</p>
       </div>
 
-      <div className="p-4 relative">
-        {/* Highlighted overlay */}
-        {highlights.length > 0 && (
-          <div
-            ref={containerRef}
-            className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none overflow-hidden rounded-lg bg-slate-50 p-4 text-slate-700"
-            style={{
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem',
-              lineHeight: '1.5',
-            }}
-          >
-            {renderHighlightedCode()}
-          </div>
-        )}
-
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={isLoading}
-          className="relative w-full h-96 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm bg-white"
-          style={{
-            backgroundColor: highlights.length > 0 ? 'rgba(255, 255, 255, 0.7)' : 'white',
-          }}
-          placeholder="Enter code here..."
-        />
-      </div>
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-hidden"
+        style={
+          {
+            '--cm-content-height': '400px',
+          } as React.CSSProperties
+        }
+      />
     </div>
   );
 }

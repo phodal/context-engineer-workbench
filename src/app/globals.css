@@ -24,3 +24,40 @@ body {
     color: var(--foreground);
     font-family: Arial, Helvetica, sans-serif;
 }
+
+/* CodeMirror Styles */
+.cm-editor {
+    height: 100%;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+.cm-content {
+    padding: 12px 0;
+}
+
+.cm-gutters {
+    background-color: #f5f5f5;
+    border-right: 1px solid #e0e0e0;
+}
+
+.cm-activeLineGutter {
+    background-color: #e8f4f8;
+}
+
+.cm-cursor {
+    border-left: 2px solid #333;
+}
+
+.cm-selectionBackground {
+    background-color: rgba(39, 95, 255, 0.3);
+}
+
+.cm-line {
+    padding: 0 12px;
+}
+
+/* Capture name highlighting */
+.cm-capture-name {
+    font-weight: bold;
+}

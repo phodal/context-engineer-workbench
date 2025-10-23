@@ -185,6 +185,7 @@ export default function TreeSitterPlayground() {
               captureNames={captureNames}
               code={code}
               language={language}
+              tree={tree}
             />
           </div>
         </div>

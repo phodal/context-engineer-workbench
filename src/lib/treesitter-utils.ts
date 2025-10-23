@@ -302,6 +302,101 @@ export function getColorForCaptureName(
 }
 
 /**
+ * Extract unique node types from a tree
+ */
+export function extractNodeTypes(
+  node: TreeNode | null,
+  maxDepth = 3,
+  currentDepth = 0
+): Set<string> {
+  const types = new Set<string>();
+
+  if (!node || currentDepth >= maxDepth) {
+    return types;
+  }
+
+  if (node.isNamed && !node.isMissing && !node.isError) {
+    types.add(node.type);
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      const childTypes = extractNodeTypes(child, maxDepth, currentDepth + 1);
+      childTypes.forEach((type) => types.add(type));
+    }
+  }
+
+  return types;
+}
+
+/**
+ * Generate example queries based on node types
+ */
+export function generateExampleQueries(
+  nodeTypes: Set<string>,
+  language: string
+): Record<string, string> {
+  const examples: Record<string, string> = {};
+
+  // Language-specific patterns
+  const patterns: Record<string, Record<string, string>> = {
+    javascript: {
+      FunctionDeclaration: '(function_declaration name: (identifier) @name)',
+      VariableDeclaration: '(variable_declarator name: (identifier) @name)',
+      FunctionCall: '(call_expression function: (identifier) @function)',
+      StringLiteral: '(string) @string',
+      Comment: '(comment) @comment',
+    },
+    typescript: {
+      FunctionDeclaration: '(function_declaration name: (identifier) @name)',
+      VariableDeclaration: '(variable_declarator name: (identifier) @name)',
+      FunctionCall: '(call_expression function: (identifier) @function)',
+      Interface: '(interface_declaration name: (type_identifier) @name)',
+      TypeAlias: '(type_alias_declaration name: (type_identifier) @name)',
+    },
+    python: {
+      FunctionDefinition: '(function_definition name: (identifier) @name)',
+      ClassDefinition: '(class_definition name: (identifier) @name)',
+      Assignment: '(assignment left: (identifier) @name)',
+      String: '(string) @string',
+      Comment: '(comment) @comment',
+    },
+    java: {
+      MethodDeclaration: '(method_declaration name: (identifier) @name)',
+      ClassDeclaration: '(class_declaration name: (identifier) @name)',
+      VariableDeclaration: '(variable_declarator name: (identifier) @name)',
+      StringLiteral: '(string_literal) @string',
+    },
+  };
+
+  // Get language-specific patterns or use default
+  const langPatterns = patterns[language] || patterns.javascript;
+
+  // Add all available patterns
+  Object.assign(examples, langPatterns);
+
+  // Add dynamic patterns based on detected node types
+  if (nodeTypes.has('function_declaration') || nodeTypes.has('function_definition')) {
+    examples['All Functions'] = '(function_declaration name: (identifier) @name) @function';
+  }
+
+  if (nodeTypes.has('class_declaration') || nodeTypes.has('class_definition')) {
+    examples['All Classes'] = '(class_declaration name: (identifier) @name) @class';
+  }
+
+  if (nodeTypes.has('variable_declarator') || nodeTypes.has('assignment')) {
+    examples['All Variables'] = '(variable_declarator name: (identifier) @name) @variable';
+  }
+
+  if (nodeTypes.has('call_expression')) {
+    examples['All Function Calls'] =
+      '(call_expression function: (identifier) @function arguments: (arguments) @args)';
+  }
+
+  return examples;
+}
+
+/**
  * Dispose of resources
  */
 export function dispose() {
