@@ -57,7 +57,7 @@ class BM25 {
     return text
       .toLowerCase()
       .split(/\s+/)
-      .filter(token => token.length > 0);
+      .filter((token) => token.length > 0);
   }
 
   search(query: string): number[] {
@@ -73,11 +73,7 @@ class BM25 {
 
         const numerator = freq * (this.k1 + 1);
         const denominator =
-          freq +
-          this.k1 *
-            (1 -
-              this.b +
-              this.b * (docLength / this.avgDocLength));
+          freq + this.k1 * (1 - this.b + this.b * (docLength / this.avgDocLength));
 
         scores[i] += idf * (numerator / denominator);
       }
@@ -152,7 +148,7 @@ export class BM25Retriever {
    */
   private rebuildIndex(): void {
     // 提取文档文本
-    this.documentTexts = this.documents.map(doc => doc.content);
+    this.documentTexts = this.documents.map((doc) => doc.content);
 
     // 创建 BM25 实例
     this.bm25 = new BM25(this.documentTexts);
@@ -183,7 +179,7 @@ export class BM25Retriever {
           index,
           score,
         }))
-        .filter(result => result.score > 0)
+        .filter((result) => result.score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, topK)
         .map((result, rank) => ({
@@ -223,4 +219,3 @@ export class BM25Retriever {
     return [...this.documents];
   }
 }
-

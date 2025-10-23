@@ -55,7 +55,9 @@ export default function VectorSearchResultsPanel({
           <div className="p-6 space-y-4">
             {/* RXDB Vector Search Formula */}
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <p className="text-xs font-semibold text-slate-900 mb-2">RXDB Vector Search (Distance to Samples):</p>
+              <p className="text-xs font-semibold text-slate-900 mb-2">
+                RXDB Vector Search (Distance to Samples):
+              </p>
               <div className="bg-white p-3 rounded border border-slate-200 overflow-x-auto space-y-2">
                 <div>
                   <p className="text-xs text-slate-600 mb-1">1. Euclidean Distance:</p>
@@ -71,18 +73,20 @@ export default function VectorSearchResultsPanel({
                 </div>
               </div>
               <p className="text-xs text-slate-600 mt-2">
-                <span className="font-semibold">Method:</span> Distance to Samples Indexing (5 sample vectors)
+                <span className="font-semibold">Method:</span> Distance to Samples Indexing (5
+                sample vectors)
               </p>
               <p className="text-xs text-slate-600 mt-1">
-                <span className="font-semibold">Range:</span> 0 to 1 (higher = more semantically similar)
+                <span className="font-semibold">Range:</span> 0 to 1 (higher = more semantically
+                similar)
               </p>
             </div>
 
             {/* Results List */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {searchResults.map((result, idx) => (
-                <div 
-                  key={result.id} 
+                <div
+                  key={result.id}
                   className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-r from-slate-50 to-white"
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -91,12 +95,12 @@ export default function VectorSearchResultsPanel({
                         {idx + 1}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-slate-900">
-                          {result.title}
-                        </h3>
+                        <h3 className="text-sm font-semibold text-slate-900">{result.title}</h3>
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ml-2 ${getScoreColor(result.score)}`}>
+                    <div
+                      className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ml-2 ${getScoreColor(result.score)}`}
+                    >
                       {(result.score * 100).toFixed(1)}%
                     </div>
                   </div>
@@ -122,10 +126,22 @@ export default function VectorSearchResultsPanel({
                   {/* Embedding Vector Display */}
                   {result.embedding && (
                     <div className="bg-slate-100 rounded p-2 border border-slate-300">
-                      <p className="text-xs font-semibold text-slate-700 mb-1">Embedding Vector (1024-dim):</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-1">
+                        Embedding Vector (1024-dim):
+                      </p>
                       <div className="text-xs text-slate-600 font-mono overflow-x-auto">
                         <code>
-                          [{result.embedding.slice(0, 5).map(v => v.toFixed(4)).join(', ')}, ..., {result.embedding.slice(-5).map(v => v.toFixed(4)).join(', ')}]
+                          [
+                          {result.embedding
+                            .slice(0, 5)
+                            .map((v) => v.toFixed(4))
+                            .join(', ')}
+                          , ...,{' '}
+                          {result.embedding
+                            .slice(-5)
+                            .map((v) => v.toFixed(4))
+                            .join(', ')}
+                          ]
                         </code>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
@@ -145,7 +161,9 @@ export default function VectorSearchResultsPanel({
         <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
           <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-slate-200">
             <h2 className="text-lg font-bold text-slate-900">Generate RAG Answer</h2>
-            <p className="text-xs text-slate-600 mt-1">Use vector search results to generate answer</p>
+            <p className="text-xs text-slate-600 mt-1">
+              Use vector search results to generate answer
+            </p>
           </div>
 
           <div className="p-6 space-y-4">
@@ -170,9 +188,7 @@ export default function VectorSearchResultsPanel({
             {executionResult.status === 'success' && executionResult.result && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-96 overflow-y-auto">
                 <div className="prose prose-sm max-w-none text-slate-900 text-sm leading-relaxed">
-                  <ReactMarkdown>
-                    {executionResult.result}
-                  </ReactMarkdown>
+                  <ReactMarkdown>{executionResult.result}</ReactMarkdown>
                 </div>
               </div>
             )}
@@ -189,4 +205,3 @@ export default function VectorSearchResultsPanel({
     </div>
   );
 }
-

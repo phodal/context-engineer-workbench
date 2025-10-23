@@ -166,7 +166,9 @@ export default function PipelineWithPapers({
                 >
                   {isComplete ? '✓' : idx + 1}
                 </button>
-                <p className="text-xs font-semibold text-slate-900 text-center truncate">{step.name}</p>
+                <p className="text-xs font-semibold text-slate-900 text-center truncate">
+                  {step.name}
+                </p>
 
                 {/* Arrow between steps */}
                 {idx < PIPELINE_STEPS.length - 1 && (
@@ -188,11 +190,13 @@ export default function PipelineWithPapers({
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xs font-semibold text-slate-900">{step.label}</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded whitespace-nowrap ${
-                    getStepStatus(step.id) === 'complete'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded whitespace-nowrap ${
+                      getStepStatus(step.id) === 'complete'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}
+                  >
                     {getStepStatus(step.id) === 'complete' ? '✓' : '○'}
                   </span>
                 </div>
@@ -204,9 +208,7 @@ export default function PipelineWithPapers({
               {/* Expanded Content */}
               {expandedSteps[step.id] && (
                 <div className="px-3 py-2 bg-white border-t border-slate-200 space-y-2">
-                  {step.details && (
-                    <p className="text-xs text-slate-700">{step.details}</p>
-                  )}
+                  {step.details && <p className="text-xs text-slate-700">{step.details}</p>}
 
                   {/* Papers Toggle Button */}
                   <button
@@ -245,4 +247,3 @@ export default function PipelineWithPapers({
     </div>
   );
 }
-

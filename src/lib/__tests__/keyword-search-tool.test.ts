@@ -197,7 +197,8 @@ describe('KeywordSearchTool', () => {
 
     it('should handle very long query', async () => {
       tool.addDocuments(testDocuments);
-      const longQuery = 'programming language for data science machine learning artificial intelligence';
+      const longQuery =
+        'programming language for data science machine learning artificial intelligence';
       const result = await tool.call({ query: longQuery });
       expect(result.success).toBe(true);
     });
@@ -227,4 +228,3 @@ describe('KeywordSearchTool', () => {
     });
   });
 });
-

@@ -1,6 +1,6 @@
 /**
  * LLM API Performance Metrics
- * 
+ *
  * Tracks and calculates key performance indicators for LLM API calls:
  * - FirstToken Latency: Time to receive first token (TTFT)
  * - Total Time: End-to-end latency from request to complete response
@@ -12,16 +12,16 @@ export interface APIMetrics {
   // Timing metrics (in milliseconds)
   firstTokenLatency: number; // Time to first token (TTFT)
   totalLatency: number; // Total end-to-end time
-  
+
   // Token metrics
   inputTokens: number;
   outputTokens: number;
   totalTokens: number;
-  
+
   // Calculated metrics
   tokensPerSecond: number; // Output tokens / (totalLatency / 1000)
   averageLatencyPerToken: number; // totalLatency / outputTokens
-  
+
   // Metadata
   timestamp: number; // When the request started
   model: string;
@@ -65,17 +65,15 @@ export function recordFirstToken(collector: MetricsCollector): void {
 export function finalizeMetrics(collector: MetricsCollector): APIMetrics {
   const now = Date.now();
   const totalLatency = now - collector.startTime;
-  const firstTokenLatency = collector.firstTokenTime 
-    ? collector.firstTokenTime - collector.startTime 
+  const firstTokenLatency = collector.firstTokenTime
+    ? collector.firstTokenTime - collector.startTime
     : totalLatency;
-  
+
   const totalTokens = collector.inputTokens + collector.outputTokens;
-  const tokensPerSecond = collector.outputTokens > 0 
-    ? (collector.outputTokens / (totalLatency / 1000))
-    : 0;
-  const averageLatencyPerToken = collector.outputTokens > 0
-    ? totalLatency / collector.outputTokens
-    : 0;
+  const tokensPerSecond =
+    collector.outputTokens > 0 ? collector.outputTokens / (totalLatency / 1000) : 0;
+  const averageLatencyPerToken =
+    collector.outputTokens > 0 ? totalLatency / collector.outputTokens : 0;
 
   return {
     firstTokenLatency,
@@ -119,7 +117,7 @@ export function formatMetrics(metrics: APIMetrics): Record<string, string> {
     'Input Tokens': metrics.inputTokens.toString(),
     'Output Tokens': metrics.outputTokens.toString(),
     'Total Tokens': metrics.totalTokens.toString(),
-    'Throughput': `${metrics.tokensPerSecond.toFixed(2)} tokens/s`,
+    Throughput: `${metrics.tokensPerSecond.toFixed(2)} tokens/s`,
     'Avg Latency/Token': formatDuration(metrics.averageLatencyPerToken),
   };
 }
@@ -138,17 +136,11 @@ export function calculateMetricsFromResponse(
   provider: string
 ): APIMetrics {
   const totalLatency = endTime - startTime;
-  const firstTokenLatency = firstTokenTime 
-    ? firstTokenTime - startTime 
-    : totalLatency;
-  
+  const firstTokenLatency = firstTokenTime ? firstTokenTime - startTime : totalLatency;
+
   const totalTokens = inputTokens + outputTokens;
-  const tokensPerSecond = outputTokens > 0 
-    ? (outputTokens / (totalLatency / 1000))
-    : 0;
-  const averageLatencyPerToken = outputTokens > 0
-    ? totalLatency / outputTokens
-    : 0;
+  const tokensPerSecond = outputTokens > 0 ? outputTokens / (totalLatency / 1000) : 0;
+  const averageLatencyPerToken = outputTokens > 0 ? totalLatency / outputTokens : 0;
 
   return {
     firstTokenLatency,

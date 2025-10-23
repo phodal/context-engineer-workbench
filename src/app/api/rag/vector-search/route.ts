@@ -74,4 +74,3 @@ function calculateSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / denominator;
 }
-

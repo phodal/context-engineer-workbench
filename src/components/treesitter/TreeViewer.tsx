@@ -24,16 +24,13 @@ function TreeNodeComponent({ node, depth = 0 }: { node: TreeNode; depth?: number
         className="flex items-center gap-2 py-1 hover:bg-blue-50 px-2 rounded cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        {hasChildren && (
-          <span className="w-4 text-center">
-            {expanded ? '▼' : '▶'}
-          </span>
-        )}
+        {hasChildren && <span className="w-4 text-center">{expanded ? '▼' : '▶'}</span>}
         {!hasChildren && <span className="w-4"></span>}
-        
+
         <span className="font-semibold text-blue-600">{node.type}</span>
         <span className="text-slate-500 text-xs">
-          ({node.startPosition.row}:{node.startPosition.column} - {node.endPosition.row}:{node.endPosition.column})
+          ({node.startPosition.row}:{node.startPosition.column} - {node.endPosition.row}:
+          {node.endPosition.column})
         </span>
       </div>
 
@@ -73,4 +70,3 @@ export default function TreeViewer({ tree, isLoading }: TreeViewerProps) {
     </div>
   );
 }
-

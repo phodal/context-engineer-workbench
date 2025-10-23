@@ -70,14 +70,18 @@ export default function ResultsPanel({
                 </code>
               </div>
               <p className="text-xs text-slate-600 mt-2">
-                <span className="font-semibold">Parameters:</span> k1=1.5 (saturation), b=0.75 (normalization)
+                <span className="font-semibold">Parameters:</span> k1=1.5 (saturation), b=0.75
+                (normalization)
               </p>
             </div>
 
             {/* Results List */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {searchResults.map((result, idx) => (
-                <div key={result.id} className="border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                <div
+                  key={result.id}
+                  className="border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-700">
@@ -87,7 +91,9 @@ export default function ResultsPanel({
                         {result.title}
                       </h3>
                     </div>
-                    <div className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${getScoreColor(result.score)}`}>
+                    <div
+                      className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${getScoreColor(result.score)}`}
+                    >
                       {(result.score * 100).toFixed(0)}%
                     </div>
                   </div>
@@ -142,9 +148,7 @@ export default function ResultsPanel({
             {executionResult.status === 'success' && executionResult.result && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-96 overflow-y-auto">
                 <div className="prose prose-sm max-w-none text-slate-900 text-sm leading-relaxed">
-                  <ReactMarkdown>
-                    {executionResult.result}
-                  </ReactMarkdown>
+                  <ReactMarkdown>{executionResult.result}</ReactMarkdown>
                 </div>
               </div>
             )}
@@ -161,4 +165,3 @@ export default function ResultsPanel({
     </div>
   );
 }
-

@@ -41,7 +41,7 @@ export async function generateBatchEmbeddings(texts: string[]): Promise<Embeddin
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GLM_API_KEY}`,
+        Authorization: `Bearer ${GLM_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'embedding-3',
@@ -84,4 +84,3 @@ export async function generateSingleEmbedding(text: string): Promise<number[]> {
   }
   return results[0].embedding;
 }
-

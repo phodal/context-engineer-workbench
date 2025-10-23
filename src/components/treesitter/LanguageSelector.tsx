@@ -25,10 +25,7 @@ const LANGUAGES = [
   { value: 'tsx', label: 'TypeScript React' },
 ];
 
-export default function LanguageSelector({
-  value,
-  onChange,
-}: LanguageSelectorProps) {
+export default function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   return (
     <div className="flex items-center gap-2">
       <label htmlFor="language-select" className="text-sm font-medium text-slate-700">
@@ -49,4 +46,3 @@ export default function LanguageSelector({
     </div>
   );
 }
-

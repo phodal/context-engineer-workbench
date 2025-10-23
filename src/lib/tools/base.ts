@@ -9,12 +9,15 @@
  */
 export interface ToolParameterSchema {
   type: 'object';
-  properties: Record<string, {
-    type: string;
-    description: string;
-    enum?: string[];
-    default?: any;
-  }>;
+  properties: Record<
+    string,
+    {
+      type: string;
+      description: string;
+      enum?: string[];
+      default?: any;
+    }
+  >;
   required: string[];
 }
 
@@ -103,7 +106,7 @@ export abstract class Tool {
       if (key in this.parameters.properties) {
         const schema = this.parameters.properties[key];
         const actualType = typeof value;
-        
+
         if (schema.type === 'number' && actualType !== 'number') {
           errors.push(`Parameter ${key} should be a number, got ${actualType}`);
         } else if (schema.type === 'string' && actualType !== 'string') {
@@ -184,7 +187,7 @@ export class ToolRegistry {
    * 获取所有工具定义
    */
   getAllDefinitions(): ToolDefinition[] {
-    return Array.from(this.tools.values()).map(tool => tool.getDefinition());
+    return Array.from(this.tools.values()).map((tool) => tool.getDefinition());
   }
 
   /**
@@ -210,4 +213,3 @@ export class ToolRegistry {
     return Array.from(this.tools.keys());
   }
 }
-

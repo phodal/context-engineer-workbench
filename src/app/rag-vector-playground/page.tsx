@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import InteractionPanel from '@/components/rag-playground/InteractionPanel';
@@ -87,7 +87,7 @@ export default function RAGVectorPlaygroundPage() {
       setQueryEmbedding(queryEmbedding);
 
       // Step 3: Generate embeddings for candidate documents
-      const candidateTexts = candidateDocs.map(doc => doc.content);
+      const candidateTexts = candidateDocs.map((doc) => doc.content);
       const candidateEmbeddingsResponse = await fetch('/api/rag/vector-embedding-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,7 +126,7 @@ export default function RAGVectorPlaygroundPage() {
         console.log('First search result:', searchResults[0]);
 
         // Map RXDB results to SearchResult format with embeddings
-        const results: SearchResult[] = searchResults.map(result => ({
+        const results: SearchResult[] = searchResults.map((result) => ({
           id: result.id,
           title: result.title,
           content: result.content,
@@ -190,7 +190,7 @@ export default function RAGVectorPlaygroundPage() {
       ];
 
       const totalTokens = costs.reduce((sum, c) => sum + c.tokens, 0);
-      costs.forEach(c => {
+      costs.forEach((c) => {
         c.percentage = totalTokens > 0 ? (c.tokens / totalTokens) * 100 : 0;
       });
 
@@ -236,9 +236,7 @@ export default function RAGVectorPlaygroundPage() {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            RAG Vector Search Playground
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">RAG Vector Search Playground</h1>
           <p className="text-slate-600">
             Learn how vector-based semantic search works in RAG systems with GLM Embedding-3 & RXDB
           </p>
@@ -253,11 +251,18 @@ export default function RAGVectorPlaygroundPage() {
         <div className="space-y-8">
           {/* Top: Pipeline with Papers */}
           <PipelineWithPapers
-            rewriteResult={queryEmbedding ? { 
-              original: queryEmbedding.text, 
-              rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 3).map(v => v.toFixed(3)).join(', ')}...]`,
-              technique: 'GLM Embedding-3',
-            } : null}
+            rewriteResult={
+              queryEmbedding
+                ? {
+                    original: queryEmbedding.text,
+                    rewritten: `Embedding: [${queryEmbedding.embedding
+                      .slice(0, 3)
+                      .map((v) => v.toFixed(3))
+                      .join(', ')}...]`,
+                    technique: 'GLM Embedding-3',
+                  }
+                : null
+            }
             searchResultsCount={searchResults.length}
             executionStatus={executionResult.status}
           />
@@ -267,12 +272,16 @@ export default function RAGVectorPlaygroundPage() {
             userQuery={userQuery}
             onQueryChange={setUserQuery}
             onRewrite={handleQueryEmbedding}
-            rewriteResult={queryEmbedding ? { 
-              original: queryEmbedding.text, 
-              rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 30).join(', ')}...]`,
-              technique: 'GLM Embedding-3',
-              timestamp: Date.now()
-            } : null}
+            rewriteResult={
+              queryEmbedding
+                ? {
+                    original: queryEmbedding.text,
+                    rewritten: `Embedding: [${queryEmbedding.embedding.slice(0, 30).join(', ')}...]`,
+                    technique: 'GLM Embedding-3',
+                    timestamp: Date.now(),
+                  }
+                : null
+            }
             tokenCosts={tokenCosts}
             isLoading={isLoading}
           />
@@ -282,12 +291,16 @@ export default function RAGVectorPlaygroundPage() {
             <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
               <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-slate-200">
                 <h2 className="text-lg font-bold text-slate-900">Generated Candidates</h2>
-                <p className="text-xs text-slate-600 mt-1">AI-generated documents related to your query</p>
+                <p className="text-xs text-slate-600 mt-1">
+                  AI-generated documents related to your query
+                </p>
               </div>
               <div className="p-6 space-y-4">
                 {candidates.map((candidate, idx) => (
                   <div key={candidate.id} className="border border-slate-200 rounded p-4">
-                    <h3 className="font-semibold text-slate-900">{idx + 1}. {candidate.title}</h3>
+                    <h3 className="font-semibold text-slate-900">
+                      {idx + 1}. {candidate.title}
+                    </h3>
                     <p className="text-sm text-slate-600 mt-2">{candidate.content}</p>
                   </div>
                 ))}
@@ -333,4 +346,3 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / denominator;
 }
-

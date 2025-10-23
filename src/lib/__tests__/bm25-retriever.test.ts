@@ -14,7 +14,8 @@ describe('BM25Retriever', () => {
     testDocuments = [
       {
         id: 'doc1',
-        content: 'Machine learning is a subset of artificial intelligence that focuses on data analysis.',
+        content:
+          'Machine learning is a subset of artificial intelligence that focuses on data analysis.',
         metadata: {
           source: 'test.md',
           chunkIndex: 0,
@@ -22,7 +23,8 @@ describe('BM25Retriever', () => {
       },
       {
         id: 'doc2',
-        content: 'Deep learning uses neural networks with multiple layers to process complex patterns.',
+        content:
+          'Deep learning uses neural networks with multiple layers to process complex patterns.',
         metadata: {
           source: 'test.md',
           chunkIndex: 1,
@@ -38,7 +40,8 @@ describe('BM25Retriever', () => {
       },
       {
         id: 'doc4',
-        content: 'Computer vision allows machines to interpret and analyze visual information from images.',
+        content:
+          'Computer vision allows machines to interpret and analyze visual information from images.',
         metadata: {
           source: 'test.md',
           chunkIndex: 3,
@@ -171,4 +174,3 @@ describe('BM25Retriever', () => {
     });
   });
 });
-

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const embeddingResults = await generateBatchEmbeddings(texts);
 
     // Extract just the embeddings
-    const embeddings = embeddingResults.map(result => result.embedding);
+    const embeddings = embeddingResults.map((result) => result.embedding);
 
     return NextResponse.json({
       success: true,
@@ -42,4 +42,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

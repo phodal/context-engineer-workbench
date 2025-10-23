@@ -26,7 +26,8 @@ export class KeywordSearchTool extends Tool {
   constructor(config: KeywordSearchToolConfig = {}) {
     const definition: ToolDefinition = {
       name: 'keyword_search',
-      description: 'Performs keyword-based search using BM25 algorithm. Use for finding documents with specific terms or keywords.',
+      description:
+        'Performs keyword-based search using BM25 algorithm. Use for finding documents with specific terms or keywords.',
       parameters: {
         type: 'object',
         properties: {
@@ -96,7 +97,7 @@ export class KeywordSearchTool extends Tool {
         success: true,
         data: {
           query: result.query,
-          results: result.chunks.map(item => ({
+          results: result.chunks.map((item) => ({
             id: item.chunk.id,
             content: item.chunk.content,
             metadata: item.chunk.metadata,
@@ -123,4 +124,3 @@ export class KeywordSearchTool extends Tool {
     }
   }
 }
-

@@ -10,7 +10,7 @@ describe('Metrics Module', () => {
   describe('createMetricsCollector', () => {
     it('should create a metrics collector with initial values', () => {
       const collector = createMetricsCollector('gpt-4', 'OpenAI');
-      
+
       expect(collector.model).toBe('gpt-4');
       expect(collector.provider).toBe('OpenAI');
       expect(collector.inputTokens).toBe(0);
@@ -24,9 +24,9 @@ describe('Metrics Module', () => {
     it('should record the first token time', () => {
       const collector = createMetricsCollector('gpt-4', 'OpenAI');
       const beforeRecord = Date.now();
-      
+
       recordFirstToken(collector);
-      
+
       const afterRecord = Date.now();
       expect(collector.firstTokenTime).toBeDefined();
       expect(collector.firstTokenTime!).toBeGreaterThanOrEqual(beforeRecord);
@@ -35,13 +35,13 @@ describe('Metrics Module', () => {
 
     it('should not overwrite first token time if already set', () => {
       const collector = createMetricsCollector('gpt-4', 'OpenAI');
-      
+
       recordFirstToken(collector);
       const firstTime = collector.firstTokenTime;
-      
+
       // Wait a bit and record again
       recordFirstToken(collector);
-      
+
       expect(collector.firstTokenTime).toBe(firstTime);
     });
   });
@@ -51,13 +51,13 @@ describe('Metrics Module', () => {
       const collector = createMetricsCollector('gpt-4', 'OpenAI');
       collector.inputTokens = 100;
       collector.outputTokens = 50;
-      
+
       // Simulate some time passing
       const startTime = collector.startTime;
       collector.startTime = startTime - 1000; // 1 second ago
-      
+
       const metrics = finalizeMetrics(collector);
-      
+
       expect(metrics.inputTokens).toBe(100);
       expect(metrics.outputTokens).toBe(50);
       expect(metrics.totalTokens).toBe(150);
@@ -72,9 +72,9 @@ describe('Metrics Module', () => {
       const collector = createMetricsCollector('gpt-4', 'OpenAI');
       collector.inputTokens = 100;
       collector.outputTokens = 0;
-      
+
       const metrics = finalizeMetrics(collector);
-      
+
       expect(metrics.tokensPerSecond).toBe(0);
       expect(metrics.averageLatencyPerToken).toBe(0);
     });
@@ -108,7 +108,7 @@ describe('Metrics Module', () => {
         model: 'gpt-4',
         provider: 'OpenAI',
       };
-      
+
       const formatted = formatMetrics(metrics);
 
       expect(formatted['First Token Latency']).toBe('150ms');
@@ -126,7 +126,7 @@ describe('Metrics Module', () => {
       const startTime = Date.now() - 1000;
       const endTime = Date.now();
       const firstTokenTime = startTime + 200;
-      
+
       const metrics = calculateMetricsFromResponse(
         startTime,
         endTime,
@@ -136,7 +136,7 @@ describe('Metrics Module', () => {
         'gpt-4',
         'OpenAI'
       );
-      
+
       expect(metrics.inputTokens).toBe(100);
       expect(metrics.outputTokens).toBe(50);
       expect(metrics.totalTokens).toBe(150);
@@ -149,7 +149,7 @@ describe('Metrics Module', () => {
     it('should handle undefined first token time', () => {
       const startTime = Date.now() - 1000;
       const endTime = Date.now();
-      
+
       const metrics = calculateMetricsFromResponse(
         startTime,
         endTime,
@@ -159,9 +159,8 @@ describe('Metrics Module', () => {
         'gpt-4',
         'OpenAI'
       );
-      
+
       expect(metrics.firstTokenLatency).toBe(metrics.totalLatency);
     });
   });
 });
-

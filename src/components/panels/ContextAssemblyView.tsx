@@ -30,7 +30,7 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
     }
   };
 
-  const totalTokens = 
+  const totalTokens =
     estimateTokens(context.systemPrompt) +
     context.retrievedDocs.reduce((sum, doc) => sum + estimateTokens(doc.content), 0) +
     estimateTokens(context.chatHistory) +
@@ -61,7 +61,9 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="text-xs text-gray-500 mb-1">Total Tokens</div>
-            <div className="text-xl font-semibold text-gray-900">{totalTokens.toLocaleString()}</div>
+            <div className="text-xl font-semibold text-gray-900">
+              {totalTokens.toLocaleString()}
+            </div>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="text-xs text-gray-500 mb-1">Context Window Usage</div>
@@ -91,7 +93,9 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
           <div className="border-l-4 border-blue-500 bg-blue-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-blue-900">System Prompt</span>
-              <span className="text-xs text-blue-700">{estimateTokens(context.systemPrompt)} tokens</span>
+              <span className="text-xs text-blue-700">
+                {estimateTokens(context.systemPrompt)} tokens
+              </span>
             </div>
             <div className="text-sm text-blue-800 whitespace-pre-wrap">{context.systemPrompt}</div>
           </div>
@@ -103,7 +107,8 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-green-900">Retrieved Documents</span>
               <span className="text-xs text-green-700">
-                {context.retrievedDocs.reduce((sum, doc) => sum + estimateTokens(doc.content), 0)} tokens
+                {context.retrievedDocs.reduce((sum, doc) => sum + estimateTokens(doc.content), 0)}{' '}
+                tokens
               </span>
             </div>
             <div className="space-y-2">
@@ -125,7 +130,9 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
           <div className="border-l-4 border-purple-500 bg-purple-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-purple-900">Chat History</span>
-              <span className="text-xs text-purple-700">{estimateTokens(context.chatHistory)} tokens</span>
+              <span className="text-xs text-purple-700">
+                {estimateTokens(context.chatHistory)} tokens
+              </span>
             </div>
             <div className="text-sm text-purple-800 whitespace-pre-wrap">{context.chatHistory}</div>
           </div>
@@ -136,7 +143,9 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
           <div className="border-l-4 border-orange-500 bg-orange-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-orange-900">Tool Definitions</span>
-              <span className="text-xs text-orange-700">{estimateTokens(context.toolDefinitions)} tokens</span>
+              <span className="text-xs text-orange-700">
+                {estimateTokens(context.toolDefinitions)} tokens
+              </span>
             </div>
             <div className="text-sm text-orange-800 font-mono">{context.toolDefinitions}</div>
           </div>
@@ -147,7 +156,9 @@ export default function ContextAssemblyView({ context, config }: ContextAssembly
           <div className="border-l-4 border-red-500 bg-red-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-red-900">User Input</span>
-              <span className="text-xs text-red-700">{estimateTokens(context.userInput)} tokens</span>
+              <span className="text-xs text-red-700">
+                {estimateTokens(context.userInput)} tokens
+              </span>
             </div>
             <div className="text-sm text-red-800 whitespace-pre-wrap">{context.userInput}</div>
           </div>

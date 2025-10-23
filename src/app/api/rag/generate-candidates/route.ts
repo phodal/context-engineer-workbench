@@ -22,10 +22,7 @@ export async function POST(request: NextRequest) {
     const { query } = await request.json();
 
     if (!query || typeof query !== 'string') {
-      return NextResponse.json(
-        { error: 'Query parameter is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
     }
 
     // Use AI to generate candidate documents related to the query
@@ -92,4 +89,3 @@ Make sure the documents are diverse and cover different aspects of the query top
     );
   }
 }
-

@@ -9,7 +9,9 @@ interface InteractionPanelProps {
   isLoading: boolean;
   error: Error | undefined;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSubmit: (e: React.KeyboardEvent<HTMLTextAreaElement> | React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (
+    e: React.KeyboardEvent<HTMLTextAreaElement> | React.FormEvent<HTMLFormElement>
+  ) => void;
 }
 
 export default function InteractionPanel({
@@ -53,16 +55,19 @@ export default function InteractionPanel({
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <p className="text-gray-500 text-sm">No messages yet. Start by sending a message below.</p>
+            <p className="text-gray-500 text-sm">
+              No messages yet. Start by sending a message below.
+            </p>
           </div>
         ) : (
           <>
             {messages.map((message) => {
               // Extract text content from UIMessage parts
-              const textContent = message.parts
-                ?.filter(part => part.type === 'text')
-                .map(part => part.text)
-                .join('') || '';
+              const textContent =
+                message.parts
+                  ?.filter((part) => part.type === 'text')
+                  .map((part) => part.text)
+                  .join('') || '';
 
               return (
                 <div
@@ -93,8 +98,14 @@ export default function InteractionPanel({
                 <div className="bg-gray-100 rounded-lg px-4 py-3">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.1s' }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -132,7 +143,8 @@ export default function InteractionPanel({
               <span className="text-xs text-gray-500">{input?.length || 0} characters</span>
               <button
                 type="submit"
-                disabled={isLoading || !input?.trim()} title={`Debug: isLoading=${isLoading}, input="${input}", inputTrim="${input?.trim()}", disabled=${isLoading || !input?.trim()}`}
+                disabled={isLoading || !input?.trim()}
+                title={`Debug: isLoading=${isLoading}, input="${input}", inputTrim="${input?.trim()}", disabled=${isLoading || !input?.trim()}`}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Sending...' : 'Send'}

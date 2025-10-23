@@ -136,4 +136,3 @@ export class RAGModule {
 export function createRAGModule(config?: RAGModuleConfig): RAGModule {
   return new RAGModule(config);
 }
-

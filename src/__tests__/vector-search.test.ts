@@ -15,7 +15,7 @@ describe('Vector Search', () => {
 
     it('should generate documents with required fields', () => {
       const docs = generateMockDocuments();
-      docs.forEach(doc => {
+      docs.forEach((doc) => {
         expect(doc.id).toBeDefined();
         expect(doc.title).toBeDefined();
         expect(doc.content).toBeDefined();
@@ -27,14 +27,14 @@ describe('Vector Search', () => {
 
     it('should have unique document IDs', () => {
       const docs = generateMockDocuments();
-      const ids = docs.map(doc => doc.id);
+      const ids = docs.map((doc) => doc.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
     });
 
     it('should have meaningful content', () => {
       const docs = generateMockDocuments();
-      docs.forEach(doc => {
+      docs.forEach((doc) => {
         expect(doc.content.length).toBeGreaterThan(50);
       });
     });
@@ -85,7 +85,7 @@ describe('Vector Search', () => {
         new Array(expectedDimension).fill(0.3),
       ];
 
-      mockEmbeddings.forEach(embedding => {
+      mockEmbeddings.forEach((embedding) => {
         expect(embedding.length).toBe(expectedDimension);
       });
     });
@@ -117,4 +117,3 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / denominator;
 }
-

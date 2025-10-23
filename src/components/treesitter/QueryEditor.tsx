@@ -12,7 +12,7 @@ const QUERY_EXAMPLES: Record<string, string> = {
   'Variable Declaration': '(variable_declarator name: (identifier) @name)',
   'Function Call': '(call_expression function: (identifier) @function)',
   'String Literal': '(string) @string',
-  'Comment': '(comment) @comment',
+  Comment: '(comment) @comment',
 };
 
 export default function QueryEditor({ value, onChange }: QueryEditorProps) {
@@ -49,4 +49,3 @@ export default function QueryEditor({ value, onChange }: QueryEditorProps) {
     </div>
   );
 }
-

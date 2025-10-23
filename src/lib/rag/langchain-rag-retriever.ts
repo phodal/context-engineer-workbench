@@ -1,14 +1,14 @@
-import { BaseRetriever } from "@langchain/core/retrievers";
-import { Document } from "@langchain/core/documents";
-import { BM25Retriever } from "./bm25-retriever";
-import { LangChainDocumentRAG, LoadedDocument } from "./document-loader";
+import { BaseRetriever } from '@langchain/core/retrievers';
+import { Document } from '@langchain/core/documents';
+import { BM25Retriever } from './bm25-retriever';
+import { LangChainDocumentRAG, LoadedDocument } from './document-loader';
 
 /**
  * LangChain RAG 检索器
  * 结合 LangChain 的文档处理和我们的 BM25 检索
  */
 export class LangChainRAGRetriever extends BaseRetriever {
-  lc_namespace = ["context_engineer", "retrievers"];
+  lc_namespace = ['context_engineer', 'retrievers'];
   private documentRAG: LangChainDocumentRAG;
   private bm25Retriever: BM25Retriever;
   private topK: number;
@@ -35,15 +35,13 @@ export class LangChainRAGRetriever extends BaseRetriever {
   async addMarkdownDocuments(
     markdownContents: Array<{ content: string; source: string; title?: string }>
   ): Promise<void> {
-    const documents = markdownContents.map((doc) =>
-      ({
-        content: doc.content,
-        metadata: {
-          source: doc.source,
-          title: doc.title || doc.source,
-        },
-      })
-    );
+    const documents = markdownContents.map((doc) => ({
+      content: doc.content,
+      metadata: {
+        source: doc.source,
+        title: doc.title || doc.source,
+      },
+    }));
     await this.addDocuments(documents);
   }
 
@@ -120,4 +118,3 @@ export async function createRAGFromMarkdown(
   await retriever.addMarkdownDocuments(markdownDocs);
   return retriever;
 }
-

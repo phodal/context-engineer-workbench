@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { LangChainRAGRetriever } from "@/lib/rag/langchain-rag-retriever";
+import { NextRequest, NextResponse } from 'next/server';
+import { LangChainRAGRetriever } from '@/lib/rag/langchain-rag-retriever';
 
 // 全局 RAG 检索器实例
 let ragRetriever: LangChainRAGRetriever | null = null;
@@ -14,24 +14,29 @@ function initializeRAG() {
     // 添加示例文档
     const exampleDocs = [
       {
-        content: "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript. It adds optional static typing to the language.",
-        metadata: { source: "typescript-docs", title: "TypeScript Introduction" },
+        content:
+          'TypeScript is a typed superset of JavaScript that compiles to plain JavaScript. It adds optional static typing to the language.',
+        metadata: { source: 'typescript-docs', title: 'TypeScript Introduction' },
       },
       {
-        content: "JavaScript is a versatile programming language used for web development, server-side programming with Node.js, and more.",
-        metadata: { source: "javascript-docs", title: "JavaScript Overview" },
+        content:
+          'JavaScript is a versatile programming language used for web development, server-side programming with Node.js, and more.',
+        metadata: { source: 'javascript-docs', title: 'JavaScript Overview' },
       },
       {
-        content: "React is a JavaScript library for building user interfaces with reusable components. It uses a virtual DOM for efficient rendering.",
-        metadata: { source: "react-docs", title: "React Framework" },
+        content:
+          'React is a JavaScript library for building user interfaces with reusable components. It uses a virtual DOM for efficient rendering.',
+        metadata: { source: 'react-docs', title: 'React Framework' },
       },
       {
-        content: "LangChain is a framework for developing applications powered by language models. It provides tools for chains, agents, and memory.",
-        metadata: { source: "langchain-docs", title: "LangChain Framework" },
+        content:
+          'LangChain is a framework for developing applications powered by language models. It provides tools for chains, agents, and memory.',
+        metadata: { source: 'langchain-docs', title: 'LangChain Framework' },
       },
       {
-        content: "RAG (Retrieval-Augmented Generation) combines document retrieval with language model generation for more accurate responses.",
-        metadata: { source: "rag-docs", title: "RAG Concept" },
+        content:
+          'RAG (Retrieval-Augmented Generation) combines document retrieval with language model generation for more accurate responses.',
+        metadata: { source: 'rag-docs', title: 'RAG Concept' },
       },
     ];
 
@@ -50,9 +55,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { query, topK = 3 } = body;
 
-    if (!query || typeof query !== "string") {
+    if (!query || typeof query !== 'string') {
       return NextResponse.json(
-        { error: "Query parameter is required and must be a string" },
+        { error: 'Query parameter is required and must be a string' },
         { status: 400 }
       );
     }
@@ -78,10 +83,10 @@ export async function POST(request: NextRequest) {
       stats: retriever.getStats(),
     });
   } catch (error) {
-    console.error("RAG retrieval error:", error);
+    console.error('RAG retrieval error:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -100,16 +105,15 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stats,
-      message: "RAG retriever is ready",
+      message: 'RAG retriever is ready',
     });
   } catch (error) {
-    console.error("RAG stats error:", error);
+    console.error('RAG stats error:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
-

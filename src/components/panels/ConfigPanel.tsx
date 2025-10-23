@@ -28,7 +28,12 @@ interface ConfigPanelProps {
   onMemoryConfigChange: (updates: unknown) => void;
 }
 
-export default function ConfigPanel({ config, onConfigChange, onRAGConfigChange, onMemoryConfigChange }: ConfigPanelProps) {
+export default function ConfigPanel({
+  config,
+  onConfigChange,
+  onRAGConfigChange,
+  onMemoryConfigChange,
+}: ConfigPanelProps) {
   const [ragExpanded, setRagExpanded] = useState(false);
   const [memoryExpanded, setMemoryExpanded] = useState(false);
   const [toolsExpanded, setToolsExpanded] = useState(false);
@@ -37,13 +42,11 @@ export default function ConfigPanel({ config, onConfigChange, onRAGConfigChange,
     <div className="p-6 space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Configuration Center</h2>
-        
+
         {/* LLM Provider */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Provider
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Provider</label>
             <select
               value={config.provider}
               onChange={(e) => onConfigChange({ provider: e.target.value })}
@@ -57,9 +60,7 @@ export default function ConfigPanel({ config, onConfigChange, onRAGConfigChange,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Model
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
             <select
               value={config.model}
               onChange={(e) => onConfigChange({ model: e.target.value })}
@@ -182,9 +183,7 @@ export default function ConfigPanel({ config, onConfigChange, onRAGConfigChange,
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Mode
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search Mode</label>
               <select
                 value={config.ragConfig.searchMode}
                 onChange={(e) => onRAGConfigChange({ searchMode: e.target.value })}

@@ -84,44 +84,51 @@ export default function RAGKeywordPlaygroundPage() {
         score: number;
       }
 
-      const generateData = await generateResponse.json() as { documents: GeneratedDocument[]; usage?: { promptTokens?: number } };
+      const generateData = (await generateResponse.json()) as {
+        documents: GeneratedDocument[];
+        usage?: { promptTokens?: number };
+      };
 
       // Transform generated results to SearchResult format
-      const searchResults: SearchResult[] = generateData.documents.map((doc: GeneratedDocument) => ({
-        id: doc.id,
-        title: doc.title,
-        content: doc.content,
-        score: doc.score,
-      }));
+      const searchResults: SearchResult[] = generateData.documents.map(
+        (doc: GeneratedDocument) => ({
+          id: doc.id,
+          title: doc.title,
+          content: doc.content,
+          score: doc.score,
+        })
+      );
 
       setSearchResults(searchResults);
 
       // Calculate token costs based on actual usage
       const rewriteTokens = rewriteData.usage?.promptTokens || 100;
       const generateTokens = generateData.usage?.promptTokens || 100;
-      const searchTokens = searchResults.reduce((sum: number, r: SearchResult) =>
-        sum + (r.content?.length || 0) / 4, 0);
+      const searchTokens = searchResults.reduce(
+        (sum: number, r: SearchResult) => sum + (r.content?.length || 0) / 4,
+        0
+      );
 
       const costs: TokenCost[] = [
         {
           step: 'Query Rewrite',
           tokens: rewriteTokens,
-          percentage: 0
+          percentage: 0,
         },
         {
           step: 'Keyword Search',
           tokens: generateTokens + Math.ceil(searchTokens),
-          percentage: 0
+          percentage: 0,
         },
         {
           step: 'Execution',
           tokens: 150,
-          percentage: 0
+          percentage: 0,
         },
       ];
 
       const totalTokens = costs.reduce((sum, c) => sum + c.tokens, 0);
-      costs.forEach(c => {
+      costs.forEach((c) => {
         c.percentage = totalTokens > 0 ? (c.tokens / totalTokens) * 100 : 0;
       });
 
@@ -168,27 +175,22 @@ export default function RAGKeywordPlaygroundPage() {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            RAG Keyword Search Playground
-          </h1>
-          <p className="text-slate-600">
-            Learn how keyword-based retrieval works in RAG systems
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">RAG Keyword Search Playground</h1>
+          <p className="text-slate-600">Learn how keyword-based retrieval works in RAG systems</p>
         </div>
       </header>
 
       {/* Main Content - Vertical Layout */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-8">
+          {/* Top: Pipeline with Papers */}
+          <PipelineWithPapers
+            rewriteResult={rewriteResult}
+            searchResultsCount={searchResults.length}
+            executionStatus={executionResult.status}
+          />
 
-            {/* Top: Pipeline with Papers */}
-            <PipelineWithPapers
-                rewriteResult={rewriteResult}
-                searchResultsCount={searchResults.length}
-                executionStatus={executionResult.status}
-            />
-
-            {/* Middle: Interaction Panel */}
+          {/* Middle: Interaction Panel */}
           <InteractionPanel
             userQuery={userQuery}
             onQueryChange={setUserQuery}
@@ -211,6 +213,3 @@ export default function RAGKeywordPlaygroundPage() {
     </div>
   );
 }
-
-
-

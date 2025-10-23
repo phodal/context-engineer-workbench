@@ -13,7 +13,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should detect and parse simple JSON object', () => {
       const text = 'Here is the result: {"name": "John", "age": 30}';
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('json');
       expect(output?.isValid).toBe(true);
@@ -23,7 +23,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should detect and parse JSON array', () => {
       const text = 'The items are: [1, 2, 3, 4, 5]';
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('json');
       expect(output?.isValid).toBe(true);
@@ -38,7 +38,7 @@ describe('Structured Output Detection and Parsing', () => {
       expect(output?.type).toBe('json');
       expect(output?.isValid).toBe(true);
       expect(output?.parsed).toEqual({
-        user: { name: 'Alice', email: 'alice@example.com' }
+        user: { name: 'Alice', email: 'alice@example.com' },
       });
     });
 
@@ -64,8 +64,8 @@ describe('Structured Output Detection and Parsing', () => {
           name: 'John Doe',
           email: 'john.doe@example.com',
           age: 30,
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     });
 
@@ -85,7 +85,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should detect and parse simple XML', () => {
       const text = 'Here is XML: <root><name>John</name></root>';
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('xml');
       expect(output?.isValid).toBe(true);
@@ -94,7 +94,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should handle XML with attributes', () => {
       const text = '<person id="1"><name>Alice</name></person>';
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('xml');
       expect(output?.isValid).toBe(true);
@@ -105,7 +105,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should extract all JSON objects from text', () => {
       const text = 'First: {"a": 1} and second: {"b": 2}';
       const outputs = extractAllStructuredOutputs(text);
-      
+
       expect(outputs.length).toBeGreaterThanOrEqual(1);
       expect(outputs[0].type).toBe('json');
       expect(outputs[0].isValid).toBe(true);
@@ -114,7 +114,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should return empty array for text without structured output', () => {
       const text = 'This is just plain text without any JSON or XML';
       const outputs = extractAllStructuredOutputs(text);
-      
+
       expect(outputs).toEqual([]);
     });
   });
@@ -123,7 +123,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should format JSON output with proper indentation', () => {
       const text = '{"name":"John","age":30}';
       const output = extractStructuredOutput(text);
-      
+
       if (output) {
         const formatted = formatStructuredOutput(output);
         expect(formatted).toContain('name');
@@ -151,7 +151,7 @@ describe('Structured Output Detection and Parsing', () => {
     it('should prioritize JSON over XML when both present', () => {
       const text = '{"key": "value"} and <root>text</root>';
       const output = extractStructuredOutput(text);
-      
+
       expect(output?.type).toBe('json');
     });
   });
@@ -167,7 +167,7 @@ describe('Structured Output Detection and Parsing', () => {
         }
       }`;
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('json');
       expect(output?.isValid).toBe(true);
@@ -176,10 +176,9 @@ describe('Structured Output Detection and Parsing', () => {
     it('should parse structured data with special characters', () => {
       const text = '{"message": "Hello \\"World\\"", "emoji": "😀"}';
       const output = extractStructuredOutput(text);
-      
+
       expect(output).not.toBeNull();
       expect(output?.type).toBe('json');
     });
   });
 });
-

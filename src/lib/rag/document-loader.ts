@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { DocumentChunk } from "./bm25-retriever";
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { DocumentChunk } from './bm25-retriever';
 
 /**
  * 文档加载器 - 支持多种格式
@@ -21,14 +21,11 @@ export interface LoadedDocument {
 export class DocumentProcessor {
   private splitter: RecursiveCharacterTextSplitter;
 
-  constructor(
-    chunkSize: number = 1000,
-    chunkOverlap: number = 200
-  ) {
+  constructor(chunkSize: number = 1000, chunkOverlap: number = 200) {
     this.splitter = new RecursiveCharacterTextSplitter({
       chunkSize,
       chunkOverlap,
-      separators: ["\n\n", "\n", " ", ""],
+      separators: ['\n\n', '\n', ' ', ''],
     });
   }
 
@@ -80,7 +77,7 @@ export class DocumentProcessor {
   static fromJSON(data: any, source: string): LoadedDocument[] {
     if (Array.isArray(data)) {
       return data.map((item, index) => ({
-        content: typeof item === "string" ? item : JSON.stringify(item),
+        content: typeof item === 'string' ? item : JSON.stringify(item),
         metadata: {
           source,
           title: `${source}-${index}`,
@@ -167,4 +164,3 @@ export class LangChainDocumentRAG {
     };
   }
 }
-

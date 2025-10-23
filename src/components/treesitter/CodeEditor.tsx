@@ -9,12 +9,7 @@ interface CodeEditorProps {
   isLoading: boolean;
 }
 
-export default function CodeEditor({
-  value,
-  onChange,
-  language,
-  isLoading,
-}: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, language, isLoading }: CodeEditorProps) {
   return (
     <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200">
@@ -34,4 +29,3 @@ export default function CodeEditor({
     </div>
   );
 }
-

@@ -23,24 +23,18 @@ export default function QueryResults({ results }: QueryResultsProps) {
         ) : (
           <div className="space-y-4">
             {results.map((match, matchIdx) => (
-              <div
-                key={matchIdx}
-                className="border border-slate-200 rounded-lg p-3 bg-slate-50"
-              >
+              <div key={matchIdx} className="border border-slate-200 rounded-lg p-3 bg-slate-50">
                 <div className="text-xs font-semibold text-slate-600 mb-2">
                   Match #{matchIdx + 1}
                 </div>
                 <div className="space-y-2">
                   {match.captures.map((capture, captureIdx) => (
                     <div key={captureIdx} className="text-xs">
-                      <div className="font-mono text-orange-600 font-semibold">
-                        @{capture.name}
-                      </div>
-                      <div className="text-slate-700 mt-1 break-words">
-                        {capture.text}
-                      </div>
+                      <div className="font-mono text-orange-600 font-semibold">@{capture.name}</div>
+                      <div className="text-slate-700 mt-1 break-words">{capture.text}</div>
                       <div className="text-slate-500 text-xs mt-1">
-                        Line {capture.node.startPosition.row + 1}:{capture.node.startPosition.column + 1}
+                        Line {capture.node.startPosition.row + 1}:
+                        {capture.node.startPosition.column + 1}
                       </div>
                     </div>
                   ))}
@@ -53,4 +47,3 @@ export default function QueryResults({ results }: QueryResultsProps) {
     </div>
   );
 }
-

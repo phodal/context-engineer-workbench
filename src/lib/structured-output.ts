@@ -1,6 +1,6 @@
 /**
  * Structured Output Detection and Parsing
- * 
+ *
  * Detects and parses JSON/XML structured outputs from AI responses
  * Based on patterns from LangChain, LlamaIndex, and Spring AI
  */
@@ -106,14 +106,14 @@ function detectJSON(text: string): string | null {
 function detectXML(text: string): { start: number; end: number } | null {
   // Look for XML tag patterns
   const xmlMatch = text.match(/<[^>]+>[\s\S]*?<\/[^>]+>/);
-  
+
   if (xmlMatch) {
     return {
       start: text.indexOf(xmlMatch[0]),
-      end: text.indexOf(xmlMatch[0]) + xmlMatch[0].length
+      end: text.indexOf(xmlMatch[0]) + xmlMatch[0].length,
     };
   }
-  
+
   return null;
 }
 
@@ -128,7 +128,7 @@ function parseJSON(text: string): { parsed: unknown; isValid: boolean; error?: s
     return {
       parsed: null,
       isValid: false,
-      error: error instanceof Error ? error.message : 'Invalid JSON'
+      error: error instanceof Error ? error.message : 'Invalid JSON',
     };
   }
 }
@@ -147,7 +147,7 @@ function parseXML(text: string): { parsed: unknown; isValid: boolean; error?: st
         return {
           parsed: null,
           isValid: false,
-          error: 'Invalid XML'
+          error: 'Invalid XML',
         };
       }
 
@@ -159,14 +159,14 @@ function parseXML(text: string): { parsed: unknown; isValid: boolean; error?: st
       // Just return the raw XML as a string representation
       return {
         parsed: { raw: text },
-        isValid: true
+        isValid: true,
       };
     }
   } catch (error) {
     return {
       parsed: null,
       isValid: false,
-      error: error instanceof Error ? error.message : 'XML parsing failed'
+      error: error instanceof Error ? error.message : 'XML parsing failed',
     };
   }
 }
@@ -176,7 +176,7 @@ function parseXML(text: string): { parsed: unknown; isValid: boolean; error?: st
  */
 function xmlToJson(element: Element): unknown {
   const result: Record<string, unknown> = {};
-  
+
   // Add attributes
   if (element.attributes.length > 0) {
     result['@attributes'] = {};
@@ -185,24 +185,24 @@ function xmlToJson(element: Element): unknown {
       (result['@attributes'] as Record<string, string>)[attr.name] = attr.value;
     }
   }
-  
+
   // Add child elements
   const children: Record<string, unknown[]> = {};
   for (let i = 0; i < element.children.length; i++) {
     const child = element.children[i];
     const childJson = xmlToJson(child);
-    
+
     if (!children[child.tagName]) {
       children[child.tagName] = [];
     }
     children[child.tagName].push(childJson);
   }
-  
+
   // Add text content
   if (element.children.length === 0 && element.textContent?.trim()) {
     return element.textContent.trim();
   }
-  
+
   Object.assign(result, children);
   return result;
 }
@@ -226,7 +226,7 @@ export function extractStructuredOutput(text: string): StructuredOutput | null {
         type: 'json',
         raw: jsonText,
         parsed,
-        isValid: true
+        isValid: true,
       };
     } else {
       return {
@@ -234,7 +234,7 @@ export function extractStructuredOutput(text: string): StructuredOutput | null {
         raw: jsonText,
         parsed,
         isValid: false,
-        error
+        error,
       };
     }
   }
@@ -250,7 +250,7 @@ export function extractStructuredOutput(text: string): StructuredOutput | null {
         type: 'xml',
         raw: xmlText,
         parsed,
-        isValid: true
+        isValid: true,
       };
     } else {
       return {
@@ -258,7 +258,7 @@ export function extractStructuredOutput(text: string): StructuredOutput | null {
         raw: xmlText,
         parsed,
         isValid: false,
-        error
+        error,
       };
     }
   }
@@ -373,7 +373,7 @@ export function extractAllStructuredOutputs(text: string): StructuredOutput[] {
       raw: jsonStr,
       parsed,
       isValid,
-      error
+      error,
     });
   }
 
@@ -388,7 +388,7 @@ export function extractAllStructuredOutputs(text: string): StructuredOutput[] {
       raw: xmlStr,
       parsed,
       isValid,
-      error
+      error,
     });
   }
 
@@ -402,7 +402,7 @@ export function extractAllStructuredOutputs(text: string): StructuredOutput[] {
       raw: xmlMatch[0],
       parsed,
       isValid,
-      error
+      error,
     });
   }
 
@@ -419,4 +419,3 @@ export function formatStructuredOutput(output: StructuredOutput): string {
     return output.raw;
   }
 }
-

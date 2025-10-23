@@ -1,8 +1,8 @@
-import { ToolToLangChainAdapter } from "../tool-to-langchain";
-import { KeywordSearchTool } from "../../tools/keyword-search-tool";
-import { RAGModule } from "../../rag/rag-module";
+import { ToolToLangChainAdapter } from '../tool-to-langchain';
+import { KeywordSearchTool } from '../../tools/keyword-search-tool';
+import { RAGModule } from '../../rag/rag-module';
 
-describe("ToolToLangChainAdapter", () => {
+describe('ToolToLangChainAdapter', () => {
   let adapter: ToolToLangChainAdapter;
   let keywordSearchTool: KeywordSearchTool;
   let ragModule: RAGModule;
@@ -11,55 +11,55 @@ describe("ToolToLangChainAdapter", () => {
     ragModule = new RAGModule();
     ragModule.addDocuments([
       {
-        id: "doc1",
-        content: "TypeScript is a programming language",
-        metadata: { source: "test" },
+        id: 'doc1',
+        content: 'TypeScript is a programming language',
+        metadata: { source: 'test' },
       },
       {
-        id: "doc2",
-        content: "JavaScript runs in the browser",
-        metadata: { source: "test" },
+        id: 'doc2',
+        content: 'JavaScript runs in the browser',
+        metadata: { source: 'test' },
       },
     ]);
 
     keywordSearchTool = new KeywordSearchTool();
     keywordSearchTool.addDocuments([
       {
-        id: "doc1",
-        content: "TypeScript is a programming language",
-        metadata: { source: "test" },
+        id: 'doc1',
+        content: 'TypeScript is a programming language',
+        metadata: { source: 'test' },
       },
       {
-        id: "doc2",
-        content: "JavaScript runs in the browser",
-        metadata: { source: "test" },
+        id: 'doc2',
+        content: 'JavaScript runs in the browser',
+        metadata: { source: 'test' },
       },
     ]);
     adapter = new ToolToLangChainAdapter(keywordSearchTool);
   });
 
-  it("should adapt our tool to LangChain tool", () => {
+  it('should adapt our tool to LangChain tool', () => {
     expect(adapter.lc_namespace).toBeDefined();
     expect(adapter.schema).toBeDefined();
   });
 
-  it("should execute tool through adapter", async () => {
+  it('should execute tool through adapter', async () => {
     const result = await adapter.invoke({
-      query: "TypeScript",
+      query: 'TypeScript',
       topK: 3,
     });
 
     expect(result).toBeDefined();
-    expect(typeof result).toBe("string");
+    expect(typeof result).toBe('string');
 
     const parsed = JSON.parse(result);
     expect(parsed).toBeDefined();
   });
 
-  it("should handle JSON string input", async () => {
+  it('should handle JSON string input', async () => {
     const result = await adapter._call(
       JSON.stringify({
-        query: "JavaScript",
+        query: 'JavaScript',
         topK: 2,
       })
     );
@@ -69,14 +69,14 @@ describe("ToolToLangChainAdapter", () => {
     expect(parsed).toBeDefined();
   });
 
-  it("should get original tool", () => {
+  it('should get original tool', () => {
     const originalTool = adapter.getOriginalTool();
     expect(originalTool).toBe(keywordSearchTool);
   });
 
-  it("should execute with metadata", async () => {
+  it('should execute with metadata', async () => {
     const result = await adapter.executeWithMetadata({
-      query: "TypeScript",
+      query: 'TypeScript',
       topK: 3,
     });
 
@@ -84,11 +84,10 @@ describe("ToolToLangChainAdapter", () => {
     expect(result.executionTime).toBeGreaterThanOrEqual(0);
   });
 
-  it("should handle errors gracefully", async () => {
-    const result = await adapter._call("invalid json");
+  it('should handle errors gracefully', async () => {
+    const result = await adapter._call('invalid json');
     const parsed = JSON.parse(result);
     expect(parsed.success).toBe(false);
     expect(parsed.error).toBeDefined();
   });
 });
-

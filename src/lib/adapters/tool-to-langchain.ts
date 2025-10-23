@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { StructuredTool } from "@langchain/core/tools";
-import { Tool, ToolExecutionResult } from "../tools/base";
-import { z } from "zod";
+import { StructuredTool } from '@langchain/core/tools';
+import { Tool, ToolExecutionResult } from '../tools/base';
+import { z } from 'zod';
 
 /**
  * 将我们的 Tool 适配为 LangChain Tool
@@ -66,22 +66,22 @@ function jsonSchemaToZod(schema: any): z.ZodSchema {
     let zodSchema: z.ZodSchema;
 
     switch (propSchema.type) {
-      case "string":
+      case 'string':
         zodSchema = z.string();
         break;
-      case "number":
+      case 'number':
         zodSchema = z.number();
         break;
-      case "integer":
+      case 'integer':
         zodSchema = z.number().int();
         break;
-      case "boolean":
+      case 'boolean':
         zodSchema = z.boolean();
         break;
-      case "array":
+      case 'array':
         zodSchema = z.array(z.any());
         break;
-      case "object":
+      case 'object':
         zodSchema = z.record(z.any());
         break;
       default:
@@ -98,4 +98,3 @@ function jsonSchemaToZod(schema: any): z.ZodSchema {
 
   return z.object(properties);
 }
-

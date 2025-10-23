@@ -80,19 +80,15 @@ export default function TreeSitterPlayground() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            TreeSitter Playground
-          </h1>
-          <p className="text-slate-600">
-            Explore syntax trees with Tree-sitter
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">TreeSitter Playground</h1>
+          <p className="text-slate-600">Explore syntax trees with Tree-sitter</p>
         </div>
 
         {/* Controls */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-slate-200">
           <div className="flex items-center gap-6">
             <LanguageSelector value={language} onChange={setLanguage} />
-            
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -126,20 +122,13 @@ export default function TreeSitterPlayground() {
         <div className="grid grid-cols-3 gap-6">
           {/* Left Panel - Code Editor */}
           <div className="col-span-2">
-            <CodeEditor
-              value={code}
-              onChange={setCode}
-              language={language}
-              isLoading={isLoading}
-            />
+            <CodeEditor value={code} onChange={setCode} language={language} isLoading={isLoading} />
           </div>
 
           {/* Right Panel - Tree Viewer or Query */}
           <div className="flex flex-col gap-6">
             <QueryEditor value={query} onChange={setQuery} />
-            {query && queryResults.length > 0 && (
-              <QueryResults results={queryResults} />
-            )}
+            {query && queryResults.length > 0 && <QueryResults results={queryResults} />}
           </div>
         </div>
 
@@ -151,4 +140,3 @@ export default function TreeSitterPlayground() {
     </div>
   );
 }
-

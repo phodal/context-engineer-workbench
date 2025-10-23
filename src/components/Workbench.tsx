@@ -58,12 +58,14 @@ export default function Workbench() {
     },
   });
 
-  const [trace, ] = useState<Array<{
-    step: string;
-    duration: number;
-    tokens: number;
-    details: Record<string, unknown>;
-  }>>([]);
+  const [trace] = useState<
+    Array<{
+      step: string;
+      duration: number;
+      tokens: number;
+      details: Record<string, unknown>;
+    }>
+  >([]);
 
   const [metrics, setMetrics] = useState<APIMetrics | null>(null);
 
@@ -101,14 +103,17 @@ export default function Workbench() {
     lastMessageCountRef.current = messages.length;
 
     // Send message using AI SDK 5.0 - use CreateUIMessage format
-    sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text: input }]
-    }, {
-      body: {
-        config: config
+    sendMessage(
+      {
+        role: 'user',
+        parts: [{ type: 'text', text: input }],
+      },
+      {
+        body: {
+          config: config,
+        },
       }
-    });
+    );
 
     setInput(''); // Clear input after sending
   };
@@ -130,7 +135,9 @@ export default function Workbench() {
         const endTime = Date.now();
         const startTime = requestStartTimeRef.current;
         const totalTime = endTime - startTime;
-        const firstTokenLatency = firstTokenTimeRef.current ? firstTokenTimeRef.current - startTime : totalTime;
+        const firstTokenLatency = firstTokenTimeRef.current
+          ? firstTokenTimeRef.current - startTime
+          : totalTime;
 
         // Extract token counts from the last message metadata
         const lastMessage = messages[messages.length - 1];
@@ -146,15 +153,17 @@ export default function Workbench() {
           // DeepSeek API returns inputTokens (prompt_tokens) and outputTokens (completion_tokens)
           inputTokens = typeof usage.inputTokens === 'number' ? usage.inputTokens : 0;
           outputTokens = typeof usage.outputTokens === 'number' ? usage.outputTokens : 0;
-          totalTokens = typeof usage.totalTokens === 'number' ? usage.totalTokens : (inputTokens + outputTokens);
+          totalTokens =
+            typeof usage.totalTokens === 'number' ? usage.totalTokens : inputTokens + outputTokens;
         } else {
           // Fallback: estimate from text length (only if API doesn't return real data)
-          outputTokens = lastMessage.parts?.reduce((sum, part) => {
-            if (part.type === 'text') {
-              return sum + Math.ceil(part.text.length / 4);
-            }
-            return sum;
-          }, 0) || 0;
+          outputTokens =
+            lastMessage.parts?.reduce((sum, part) => {
+              if (part.type === 'text') {
+                return sum + Math.ceil(part.text.length / 4);
+              }
+              return sum;
+            }, 0) || 0;
           inputTokens = Math.ceil(userInputRef.current.length / 4);
           totalTokens = inputTokens + outputTokens;
         }
@@ -171,7 +180,7 @@ export default function Workbench() {
           inputTokens,
           outputTokens,
           totalTokens,
-          tokensPerSecond: outputTokens > 0 ? (outputTokens / (totalTime / 1000)) : 0,
+          tokensPerSecond: outputTokens > 0 ? outputTokens / (totalTime / 1000) : 0,
           averageLatencyPerToken: outputTokens > 0 ? totalTime / outputTokens : 0,
           timestamp: startTime,
           model: config.model,
@@ -187,18 +196,18 @@ export default function Workbench() {
   }, [messages, status]);
 
   const updateConfig = (updates: Partial<WorkbenchConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    setConfig((prev) => ({ ...prev, ...updates }));
   };
 
   const updateRAGConfig = (updates: Partial<WorkbenchConfig['ragConfig']>) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       ragConfig: { ...prev.ragConfig, ...updates },
     }));
   };
 
   const updateMemoryConfig = (updates: Partial<WorkbenchConfig['memoryConfig']>) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       memoryConfig: { ...prev.memoryConfig, ...updates },
     }));
@@ -207,13 +216,16 @@ export default function Workbench() {
   // Build context for visualization
   const context = {
     systemPrompt: 'You are a helpful AI assistant specialized in context engineering.',
-    retrievedDocs: config.enableRAG ? [
-      { content: 'Sample retrieved document 1', score: 0.95 },
-      { content: 'Sample retrieved document 2', score: 0.87 },
-    ] : [],
-    chatHistory: messages.slice(-config.memoryConfig.historyLength).map(m => 
-      `${m.role}: ${JSON.stringify(m)}`
-    ).join('\n'),
+    retrievedDocs: config.enableRAG
+      ? [
+          { content: 'Sample retrieved document 1', score: 0.95 },
+          { content: 'Sample retrieved document 2', score: 0.87 },
+        ]
+      : [],
+    chatHistory: messages
+      .slice(-config.memoryConfig.historyLength)
+      .map((m) => `${m.role}: ${JSON.stringify(m)}`)
+      .join('\n'),
     toolDefinitions: config.enableTools ? 'function search(query: string): string' : '',
     userInput: input,
   };
@@ -221,7 +233,7 @@ export default function Workbench() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <Header />
-      
+
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Config Center */}
         <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
@@ -237,10 +249,7 @@ export default function Workbench() {
         <div className="flex-1 flex flex-col">
           {/* Top: Context Assembly View */}
           <div className="flex-1 border-b border-gray-200 overflow-y-auto">
-            <ContextAssemblyView
-              context={context}
-              config={config}
-            />
+            <ContextAssemblyView context={context} config={config} />
           </div>
 
           {/* Bottom: Interaction Panel */}
@@ -258,10 +267,7 @@ export default function Workbench() {
 
         {/* Right Panel - Evaluation */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
-          <EvaluationPanel messages={messages}
-            trace={trace}
-            metrics={metrics}
-          />
+          <EvaluationPanel messages={messages} trace={trace} metrics={metrics} />
         </div>
       </div>
     </div>

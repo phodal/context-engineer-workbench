@@ -85,7 +85,7 @@ describe('Tool Base Class', () => {
     it('should validate parameter types', () => {
       const validation = tool.validateParameters({ query: 123 });
       expect(validation.valid).toBe(false);
-      expect(validation.errors.some(e => e.includes('should be a string'))).toBe(true);
+      expect(validation.errors.some((e) => e.includes('should be a string'))).toBe(true);
     });
 
     it('should validate enum values', () => {
@@ -200,4 +200,3 @@ describe('Tool Registry', () => {
     expect(result.error).toContain('Tool not found');
   });
 });
-

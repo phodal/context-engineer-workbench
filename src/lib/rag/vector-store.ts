@@ -119,7 +119,7 @@ export async function initializeVectorStore(docsWithEmbeddings?: VectorDocument[
       }
 
       // Generate sample vectors for indexing (pick first 5 documents)
-      sampleVectors = docsWithEmbeddings.slice(0, 5).map(doc => doc.embedding);
+      sampleVectors = docsWithEmbeddings.slice(0, 5).map((doc) => doc.embedding);
 
       // If we have less than 5 documents, pad with random vectors
       while (sampleVectors.length < 5) {
@@ -166,8 +166,6 @@ async function addSampleDocuments(docsWithEmbeddings: VectorDocument[]) {
   }
 }
 
-
-
 /**
  * Search for similar documents using RXDB index query
  * Uses Distance to Samples method for efficient vector search
@@ -194,7 +192,7 @@ export async function vectorSearch(
 
     // Calculate actual distances for all documents
     // Convert RXDB documents to plain objects to preserve all fields
-    const docsWithDistance = allDocs.map(doc => {
+    const docsWithDistance = allDocs.map((doc) => {
       // RXDB documents have properties accessible directly
       const id = doc.id;
       const title = doc.title;
@@ -219,7 +217,7 @@ export async function vectorSearch(
     const results = docsWithDistance
       .sort((a, b) => a.score - b.score)
       .slice(0, topK)
-      .map(item => ({
+      .map((item) => ({
         ...item,
         score: 1 / (1 + item.score), // Convert distance to similarity (0-1)
       }));
@@ -259,4 +257,3 @@ export function getVectorStore(): RxDatabase<VectorDatabaseCollections> | null {
 export function getSampleVectors(): number[][] {
   return sampleVectors;
 }
-

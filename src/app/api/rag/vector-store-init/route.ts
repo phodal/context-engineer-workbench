@@ -16,7 +16,7 @@ export async function POST() {
       const mockDocs = generateMockDocuments();
 
       // Extract texts for embedding generation
-      const texts = mockDocs.map(doc => doc.content);
+      const texts = mockDocs.map((doc) => doc.content);
 
       // Generate embeddings using GLM API
       const embeddingResults = await generateBatchEmbeddings(texts);
@@ -76,4 +76,3 @@ export async function GET() {
     );
   }
 }
-

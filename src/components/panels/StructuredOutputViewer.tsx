@@ -24,9 +24,9 @@ export default function StructuredOutputViewer({ outputs }: StructuredOutputView
   }
 
   const toggleExpanded = (index: number) => {
-    setExpandedOutputs(prev => ({
+    setExpandedOutputs((prev) => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: !prev[index],
     }));
   };
 
@@ -36,7 +36,7 @@ export default function StructuredOutputViewer({ outputs }: StructuredOutputView
   return (
     <div className="mb-6 p-4 bg-linear-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
       <h3 className="text-sm font-semibold text-gray-900 mb-3">Structured Output Parse</h3>
-      
+
       {/* Output Tabs */}
       {outputs.length > 1 && (
         <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
@@ -58,11 +58,13 @@ export default function StructuredOutputViewer({ outputs }: StructuredOutputView
 
       {/* Output Type Badge */}
       <div className="flex items-center gap-2 mb-3">
-        <span className={`px-2 py-1 text-xs font-medium rounded ${
-          selectedOutput.type === 'json'
-            ? 'bg-blue-100 text-blue-700'
-            : 'bg-purple-100 text-purple-700'
-        }`}>
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${
+            selectedOutput.type === 'json'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-purple-100 text-purple-700'
+          }`}
+        >
           {selectedOutput.type.toUpperCase()}
         </span>
         {selectedOutput.isValid && (
@@ -93,15 +95,18 @@ export default function StructuredOutputViewer({ outputs }: StructuredOutputView
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
             <span className="text-sm font-medium text-gray-900">
               {selectedOutput.type === 'json' ? 'JSON Object' : 'XML Document'}
             </span>
           </div>
-          <span className="text-xs text-gray-500">
-            {formattedOutput.length} chars
-          </span>
+          <span className="text-xs text-gray-500">{formattedOutput.length} chars</span>
         </button>
 
         {/* Content */}
@@ -181,9 +186,7 @@ function JSONTreeView({ data, depth = 0 }: { data: unknown; depth?: number }) {
               {idx < data.length - 1 && <span className="text-gray-600">,</span>}
             </div>
           ))}
-          {data.length > 5 && (
-            <div className="text-gray-500">... {data.length - 5} more items</div>
-          )}
+          {data.length > 5 && <div className="text-gray-500">... {data.length - 5} more items</div>}
         </div>
         <span className="text-gray-600">]</span>
       </div>
@@ -214,4 +217,3 @@ function JSONTreeView({ data, depth = 0 }: { data: unknown; depth?: number }) {
 
   return <span className="text-xs text-gray-500">unknown</span>;
 }
-
