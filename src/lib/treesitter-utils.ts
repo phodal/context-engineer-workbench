@@ -1,108 +1,246 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-declare global {
-  interface Window {
-    TreeSitter: any;
-  }
-}
+/**
+ * Client-side TreeSitter utilities using web-tree-sitter from CDN
+ * Loads Parser and Language grammars from jsDelivr CDN
+ */
 
-let parser: any = null;
-const languages: Map<string, any> = new Map();
+// Language grammar URLs mapping
+const LANGUAGE_URLS: Record<string, string> = {
+  javascript:
+    'https://cdn.jsdelivr.net/npm/tree-sitter-javascript@0.23.1/tree-sitter-javascript.wasm',
+  typescript:
+    'https://cdn.jsdelivr.net/npm/tree-sitter-typescript@0.21.0/tree-sitter-typescript.wasm',
+  python: 'https://cdn.jsdelivr.net/npm/tree-sitter-python@0.23.0/tree-sitter-python.wasm',
+  java: 'https://cdn.jsdelivr.net/npm/tree-sitter-java@0.21.0/tree-sitter-java.wasm',
+  cpp: 'https://cdn.jsdelivr.net/npm/tree-sitter-cpp@0.23.0/tree-sitter-cpp.wasm',
+  c: 'https://cdn.jsdelivr.net/npm/tree-sitter-c@0.21.0/tree-sitter-c.wasm',
+  go: 'https://cdn.jsdelivr.net/npm/tree-sitter-go@0.21.0/tree-sitter-go.wasm',
+  rust: 'https://cdn.jsdelivr.net/npm/tree-sitter-rust@0.21.0/tree-sitter-rust.wasm',
+  html: 'https://cdn.jsdelivr.net/npm/tree-sitter-html@0.20.1/tree-sitter-html.wasm',
+  css: 'https://cdn.jsdelivr.net/npm/tree-sitter-css@0.21.0/tree-sitter-css.wasm',
+  json: 'https://cdn.jsdelivr.net/npm/tree-sitter-json@0.24.0/tree-sitter-json.wasm',
+  yaml: 'https://cdn.jsdelivr.net/npm/tree-sitter-yaml@0.6.0/tree-sitter-yaml.wasm',
+  bash: 'https://cdn.jsdelivr.net/npm/tree-sitter-bash@0.21.0/tree-sitter-bash.wasm',
+  sql: 'https://cdn.jsdelivr.net/npm/tree-sitter-sql@0.1.0/tree-sitter-sql.wasm',
+};
 
-export async function initializeParser() {
-  if (parser) return parser;
-
-  if (typeof window === 'undefined') {
-    throw new Error('TreeSitter only works in browser');
-  }
-
-  if (!window.TreeSitter) {
-    // Load TreeSitter from CDN
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.8/tree-sitter.js';
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  await window.TreeSitter.init();
-  parser = new window.TreeSitter.Parser();
-  return parser;
-}
-
-export async function getLanguage(languageName: string): Promise<any> {
-  if (languages.has(languageName)) {
-    return languages.get(languageName)!;
-  }
-
-  try {
-    const wasmUrl = `https://cdn.jsdelivr.net/npm/tree-sitter-${languageName}@latest/tree-sitter-${languageName}.wasm`;
-    const language = await window.TreeSitter.Language.load(wasmUrl);
-    languages.set(languageName, language);
-    return language;
-  } catch (error) {
-    console.error(`Failed to load language: ${languageName}`, error);
-    throw new Error(`Unsupported language: ${languageName}`);
-  }
-}
-
-export async function parseCode(code: string, languageName: string) {
-  const p = await initializeParser();
-  const language = await getLanguage(languageName);
-  p.setLanguage(language);
-  return p.parse(code);
+export interface TreeNode {
+  type: string;
+  text: string;
+  startPosition: { row: number; column: number };
+  endPosition: { row: number; column: number };
+  children?: TreeNode[];
 }
 
 export interface QueryMatch {
   pattern: number;
   captures: Array<{
-    node: any;
     name: string;
+    type: string;
     text: string;
+    startPosition: { row: number; column: number };
+    endPosition: { row: number; column: number };
   }>;
 }
 
-export async function queryTree(
-  tree: any,
-  queryString: string,
-  languageName: string
-): Promise<QueryMatch[]> {
+// Global parser instance and initialization state
+let parserInstance: any = null;
+let parserInitPromise: Promise<void> | null = null;
+const languageCache = new Map<string, any>();
+
+/**
+ * Initialize the parser (one-time setup)
+ */
+async function initializeParser(): Promise<void> {
+  if (parserInitPromise) {
+    return parserInitPromise;
+  }
+
+  parserInitPromise = (async () => {
+    try {
+      // Dynamic import from CDN - using Function to avoid TypeScript errors
+      const importModule = new Function(
+        'return import("https://cdn.jsdelivr.net/npm/web-tree-sitter@0.25.3/tree-sitter.js")'
+      ) as any;
+      const loadedModule = await importModule();
+      const { Parser } = loadedModule;
+
+      await Parser.init({
+        locateFile: () => {
+          return 'https://cdn.jsdelivr.net/npm/web-tree-sitter@0.25.3/tree-sitter.wasm';
+        },
+      });
+
+      parserInstance = new Parser();
+    } catch (error) {
+      console.error('Failed to initialize parser:', error);
+      parserInitPromise = null;
+      throw error;
+    }
+  })();
+
+  return parserInitPromise;
+}
+
+/**
+ * Load a language grammar
+ */
+async function loadLanguage(language: string): Promise<any> {
+  if (languageCache.has(language)) {
+    return languageCache.get(language);
+  }
+
   try {
-    const language = await getLanguage(languageName);
-    const query = language.query(queryString);
-    return query.matches(tree.rootNode) as QueryMatch[];
+    // Dynamic import from CDN - using Function to avoid TypeScript errors
+    const importModule = new Function(
+      'return import("https://cdn.jsdelivr.net/npm/web-tree-sitter@0.25.3/tree-sitter.js")'
+    ) as any;
+    const loadedModule = await importModule();
+    const { Language } = loadedModule;
+
+    const languageUrl = LANGUAGE_URLS[language];
+    if (!languageUrl) {
+      throw new Error(`Unsupported language: ${language}`);
+    }
+
+    const lang = await Language.load(languageUrl);
+    languageCache.set(language, lang);
+    return lang;
   } catch (error) {
-    console.error('Query error:', error);
-    throw new Error(`Invalid query: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(`Failed to load language ${language}:`, error);
+    throw error;
   }
 }
 
-export interface TreeNodeJSON {
-  type: string;
-  text: string;
-  startPosition: { row: number; column: number };
-  endPosition: { row: number; column: number };
-  children: TreeNodeJSON[];
-}
+/**
+ * Convert a tree-sitter SyntaxNode to our TreeNode interface
+ */
+function syntaxNodeToTreeNode(node: any): TreeNode {
+  const children: TreeNode[] = [];
+  for (let i = 0; i < node.childCount; i++) {
+    children.push(syntaxNodeToTreeNode(node.child(i)));
+  }
 
-export function treeToJSON(node: any): TreeNodeJSON {
   return {
     type: node.type,
     text: node.text,
-    startPosition: { row: node.startPosition.row, column: node.startPosition.column },
-    endPosition: { row: node.endPosition.row, column: node.endPosition.column },
-    children: node.children.map((child: any) => treeToJSON(child)),
+    startPosition: {
+      row: node.startPosition.row,
+      column: node.startPosition.column,
+    },
+    endPosition: {
+      row: node.endPosition.row,
+      column: node.endPosition.column,
+    },
+    children: children.length > 0 ? children : undefined,
   };
 }
 
-export function getNodeAtPosition(
-  tree: any,
-  row: number,
-  column: number
-): any {
-  return tree.rootNode.descendantForPosition({ row, column });
+/**
+ * Parse code using web-tree-sitter
+ */
+export async function parseCode(code: string, language: string): Promise<any> {
+  try {
+    await initializeParser();
+    const lang = await loadLanguage(language);
+    parserInstance.setLanguage(lang);
+
+    const tree = parserInstance.parse(code);
+    const rootNode = syntaxNodeToTreeNode(tree.rootNode);
+
+    return {
+      rootNode,
+    };
+  } catch (error) {
+    console.error('Parse error:', error);
+    throw error;
+  }
 }
 
+/**
+ * Query tree with code using web-tree-sitter
+ */
+export async function queryTreeWithCode(
+  code: string,
+  query: string,
+  language: string
+): Promise<QueryMatch[]> {
+  try {
+    await initializeParser();
+    const lang = await loadLanguage(language);
+    parserInstance.setLanguage(lang);
+
+    const tree = parserInstance.parse(code);
+    const queryObj = lang.query(query);
+    const matches = queryObj.matches(tree.rootNode);
+
+    return matches.map((match: any) => ({
+      pattern: match.patternIndex,
+      captures: match.captures.map((capture: any) => ({
+        name: capture.name,
+        type: capture.node.type,
+        text: capture.node.text,
+        startPosition: {
+          row: capture.node.startPosition.row,
+          column: capture.node.startPosition.column,
+        },
+        endPosition: {
+          row: capture.node.endPosition.row,
+          column: capture.node.endPosition.column,
+        },
+      })),
+    }));
+  } catch (error) {
+    console.error('Query error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Convert tree node to JSON (identity function for compatibility)
+ */
+export function treeToJSON(node: TreeNode): TreeNode {
+  return node;
+}
+
+/**
+ * Get node at specific position
+ */
+export function getNodeAtPosition(tree: TreeNode, row: number, column: number): TreeNode | null {
+  if (!tree) return null;
+
+  const isInRange = (node: TreeNode) => {
+    const startRow = node.startPosition.row;
+    const startCol = node.startPosition.column;
+    const endRow = node.endPosition.row;
+    const endCol = node.endPosition.column;
+
+    if (row < startRow || row > endRow) return false;
+    if (row === startRow && column < startCol) return false;
+    if (row === endRow && column > endCol) return false;
+
+    return true;
+  };
+
+  if (!isInRange(tree)) return null;
+
+  if (tree.children && tree.children.length > 0) {
+    for (const child of tree.children) {
+      const result = getNodeAtPosition(child, row, column);
+      if (result) return result;
+    }
+  }
+
+  return tree;
+}
+
+/**
+ * Dispose of resources
+ */
+export function dispose() {
+  // Clear caches
+  languageCache.clear();
+  parserInstance = null;
+  parserInitPromise = null;
+}

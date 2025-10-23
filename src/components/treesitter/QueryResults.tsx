@@ -33,8 +33,7 @@ export default function QueryResults({ results }: QueryResultsProps) {
                       <div className="font-mono text-orange-600 font-semibold">@{capture.name}</div>
                       <div className="text-slate-700 mt-1 break-words">{capture.text}</div>
                       <div className="text-slate-500 text-xs mt-1">
-                        Line {capture.node.startPosition.row + 1}:
-                        {capture.node.startPosition.column + 1}
+                        Line {capture.startPosition.row + 1}:{capture.startPosition.column + 1}
                       </div>
                     </div>
                   ))}

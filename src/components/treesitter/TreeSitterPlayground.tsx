@@ -6,7 +6,7 @@ import TreeViewer from './TreeViewer';
 import QueryEditor from './QueryEditor';
 import LanguageSelector from './LanguageSelector';
 import QueryResults from './QueryResults';
-import { parseCode, queryTree, treeToJSON, type QueryMatch } from '@/lib/treesitter-utils';
+import { parseCode, queryTreeWithCode, treeToJSON, type QueryMatch } from '@/lib/treesitter-utils';
 
 interface TreeNode {
   type: string;
@@ -59,8 +59,7 @@ export default function TreeSitterPlayground() {
 
       try {
         setIsLoading(true);
-        const parsedTree = await parseCode(code, language);
-        const results = await queryTree(parsedTree, query, language);
+        const results = await queryTreeWithCode(code, query, language);
         setQueryResults(results);
         setError(null);
       } catch (err) {
