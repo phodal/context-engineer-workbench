@@ -4,168 +4,162 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { GraphData } from '@/lib/graph-builder';
+import { HierarchicalNode, graphDataToHierarchy } from '@/lib/hierarchical-graph';
 
 interface D3GraphVisualizationProps {
   data: GraphData | null;
   isLoading?: boolean;
   onNodeClick?: (nodeId: string) => void;
+  onSingleClick?: (event: MouseEvent, node: any) => void;
+  onDoubleClick?: (event: MouseEvent, node: any) => void;
+}
+
+interface D3Node extends d3.HierarchyRectangularNode<HierarchicalNode> {
+  target?: {
+    x0: number;
+    x1: number;
+    y0: number;
+    y1: number;
+  };
 }
 
 /**
- * D3.js-based graph visualization component
- * Renders code relationship graphs with force-directed layout
+ * D3.js Zoomable Icicle visualization component
+ * Renders hierarchical code structure with interactive zoom and drill-down
  */
 export default function D3GraphVisualization({
   data,
   isLoading = false,
   onNodeClick,
+  onSingleClick = () => {},
+  onDoubleClick = () => {},
 }: D3GraphVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     if (!data || !containerRef.current) return;
 
     // Clear previous visualization
-    if (svgRef.current) {
-      svgRef.current.remove();
-    }
+    containerRef.current.innerHTML = '';
 
-    const width = containerRef.current.clientWidth || 1000;
-    const height = 600;
+    const width = containerRef.current.clientWidth || 928;
+    const height = 1200;
+
+    // Convert flat graph data to hierarchical structure
+    const hierarchyData = graphDataToHierarchy(data);
+
+    // Create color scale
+    const childrenCount = hierarchyData.children?.length ?? 0;
+    // eslint-disable-next-line prettier/prettier
+    const color = d3.scaleOrdinal(
+      d3.quantize(d3.interpolateRainbow, childrenCount + 1 || 1),
+    );
+
+    // Create hierarchy
+    const hierarchy = d3
+      .hierarchy(hierarchyData)
+      .sum((d) => (d.children ? d.children.length : 1))
+      .sort((a, b) => b.height - a.height || (b.value ?? 0) - (a.value ?? 0));
+
+    // Create partition layout
+    const root = d3
+      .partition<HierarchicalNode>()
+      .size([height, (hierarchy.height + 1) * (width / 3)])(hierarchy);
 
     // Create SVG
     const svg = d3
       .create('svg')
+      .attr('viewBox', [0, 0, width, height])
       .attr('width', width)
       .attr('height', height)
-      .attr('viewBox', [0, 0, width, height])
-      .attr('style', 'max-width: 100%; height: auto; border: 1px solid #e5e7eb;');
+      .attr('style', 'max-width: 100%; height: auto; font: 10px sans-serif;');
 
-    // Create force simulation
-    const simulation = d3
-      .forceSimulation(data.nodes as any)
-      .force(
-        'link',
-        d3
-          .forceLink(data.edges as any)
-          .id((d: any) => d.id)
-          .distance(100)
-          .strength(0.5)
-      )
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force(
-        'collision',
-        d3.forceCollide().radius((d: any) => (d.size || 10) + 5)
-      );
+    // Create cell groups
+    const cell = svg
+      .selectAll('g')
+      .data(root.descendants())
+      .join('g')
+      .attr('transform', (d: D3Node) => `translate(${d.y0},${d.x0})`);
 
-    // Create links
-    const links = svg
-      .append('g')
-      .selectAll('line')
-      .data(data.edges)
-      .join('line')
-      .attr('stroke', '#d1d5db')
-      .attr('stroke-width', 1.5)
-      .attr('stroke-opacity', 0.6);
-
-    // Create nodes
-    const nodes = svg
-      .append('g')
-      .selectAll('circle')
-      .data(data.nodes)
-      .join('circle')
-      .attr('r', (d) => d.size || 10)
-      .attr('fill', (d) => d.color || '#3b82f6')
-      .attr('stroke', '#ffffff')
-      .attr('stroke-width', 2)
+    // Add rectangles
+    const rect = cell
+      .append('rect')
+      .attr('width', (d: D3Node) => d.y1 - d.y0 - 1)
+      .attr('height', (d: D3Node) => rectHeight(d))
+      .attr('fill-opacity', 0.6)
+      .attr('fill', (d: D3Node) => {
+        if (!d.depth) return '#ccc';
+        let parent = d;
+        while (parent.depth > 1) parent = parent.parent!;
+        return color(parent.data.name);
+      })
       .style('cursor', 'pointer')
-      .on('click', (_event, d: any) => {
-        onNodeClick?.(d.id);
+      .on('click', function (event: MouseEvent, d: D3Node) {
+        onSingleClick(event, d);
+        handleDoubleClick(event, d);
       })
-      .call(drag(simulation) as any);
-
-    // Create labels
-    const labels = svg
-      .append('g')
-      .selectAll('text')
-      .data(data.nodes)
-      .join('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '.3em')
-      .attr('font-size', '11px')
-      .attr('fill', '#1f2937')
-      .attr('pointer-events', 'none')
-      .text((d) => d.label);
-
-    // Add tooltips
-    const tooltip = d3
-      .select('body')
-      .append('div')
-      .style('position', 'absolute')
-      .style('background', '#1f2937')
-      .style('color', '#ffffff')
-      .style('padding', '8px 12px')
-      .style('border-radius', '4px')
-      .style('font-size', '12px')
-      .style('pointer-events', 'none')
-      .style('opacity', 0)
-      .style('z-index', '1000');
-
-    nodes
-      .on('mouseover', (_event, d: any) => {
-        tooltip.style('opacity', 1).html(`<strong>${d.label}</strong><br/>Type: ${d.type}`);
-      })
-      .on('mousemove', (event) => {
-        tooltip.style('left', `${event.pageX + 10}px`).style('top', `${event.pageY - 10}px`);
-      })
-      .on('mouseout', () => {
-        tooltip.style('opacity', 0);
+      .on('dblclick', function (event: MouseEvent, d: D3Node) {
+        onDoubleClick(event, d);
+        handleDoubleClick(event, d);
       });
 
-    // Update positions on simulation tick
-    simulation.on('tick', () => {
-      links
-        .attr('x1', (d: any) => d.source.x)
-        .attr('y1', (d: any) => d.source.y)
-        .attr('x2', (d: any) => d.target.x)
-        .attr('y2', (d: any) => d.target.y);
+    // Add text labels
+    const text = cell
+      .append('text')
+      .style('user-select', 'none')
+      .attr('pointer-events', 'none')
+      .attr('x', 4)
+      .attr('y', 13)
+      .attr('fill-opacity', (d: D3Node) => +labelVisible(d));
 
-      nodes.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y);
+    text.append('tspan').text((d: D3Node) => d.data.name);
 
-      labels.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y);
-    });
+    // Add titles (tooltips)
+    cell.append('title').text((d: D3Node) =>
+      d
+        .ancestors()
+        .map((d) => d.data.name)
+        .reverse()
+        .join('/')
+    );
 
-    // Drag behavior
-    function drag(simulation: any) {
-      function dragstarted(event: any) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-      }
+    let focus = root;
 
-      function dragged(event: any) {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-      }
+    function handleDoubleClick(event: MouseEvent, p: D3Node) {
+      focus = focus === p ? (p = p.parent ?? root) : p;
 
-      function dragended(event: any) {
-        if (!event.active) simulation.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-      }
+      root.each((d: D3Node) => {
+        d.target = {
+          x0: ((d.x0 - p.x0) / (p.x1 - p.x0)) * height,
+          x1: ((d.x1 - p.x0) / (p.x1 - p.x0)) * height,
+          y0: d.y0 - p.y0,
+          y1: d.y1 - p.y0,
+        };
+      });
 
-      return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+      const t = cell
+        .transition()
+        .duration(750)
+        .attr('transform', (d: D3Node) => `translate(${d.target!.y0},${d.target!.x0})`);
+
+      rect.transition(t).attr('height', (d: D3Node) => rectHeight(d.target!));
+      text.transition(t).attr('fill-opacity', (d: D3Node) => +labelVisible(d.target!));
+    }
+
+    function rectHeight(d: any) {
+      return d.x1 - d.x0 - Math.min(1, (d.x1 - d.x0) / 2);
+    }
+
+    function labelVisible(d: any) {
+      return d.y1 <= width && d.y0 >= 0 && d.x1 - d.x0 > 16;
     }
 
     containerRef.current?.appendChild(svg.node() as any);
-    svgRef.current = svg.node() as SVGSVGElement;
 
     return () => {
-      tooltip.remove();
+      // Cleanup
     };
-  }, [data, onNodeClick]);
+  }, [data, onNodeClick, onSingleClick, onDoubleClick]);
 
   if (isLoading) {
     return (
@@ -188,16 +182,17 @@ export default function D3GraphVisualization({
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200">
-        <h2 className="text-lg font-bold text-slate-900">Code Relationship Graph (D3.js)</h2>
+      <div className="bg-linear-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200">
+        <h2 className="text-lg font-bold text-slate-900">Code Hierarchy (D3.js Icicle)</h2>
         <p className="text-xs text-slate-600 mt-1">
-          Nodes: {data.metadata.totalNodes} | Edges: {data.metadata.totalEdges}
+          Nodes: {data.metadata.totalNodes} | Edges: {data.metadata.totalEdges} | Double-click to
+          zoom
         </p>
       </div>
       <div
         ref={containerRef}
-        className="w-full"
-        style={{ minHeight: '600px', background: '#fafafa' }}
+        className="w-full overflow-auto"
+        style={{ minHeight: '1200px', background: '#fafafa' }}
       />
     </div>
   );

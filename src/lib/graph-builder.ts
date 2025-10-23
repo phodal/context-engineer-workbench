@@ -213,6 +213,7 @@ export function calculateNodeSizesInGraph(graph: CodeGraph): void {
 
 /**
  * Convert Graphology graph to D3-compatible data format
+ * This format is used for both force-directed and hierarchical visualizations
  */
 export function graphToD3Data(graph: CodeGraph, language: string = 'unknown'): GraphData {
   const nodes = graph.nodes().map((nodeId) => {
@@ -246,3 +247,9 @@ export function graphToD3Data(graph: CodeGraph, language: string = 'unknown'): G
     },
   };
 }
+
+/**
+ * Export hierarchical graph utilities for convenience
+ */
+export { graphDataToHierarchy, graphToHierarchy } from './hierarchical-graph';
+export type { HierarchicalNode } from './hierarchical-graph';
