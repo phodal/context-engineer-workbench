@@ -3,7 +3,6 @@
  * Uses graphology for graph representation and D3.js for visualization
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Graph from 'graphology';
 import { parseCode, TreeNode } from './treesitter-utils';
 
@@ -38,8 +37,8 @@ export interface GraphData {
 function extractDefinitions(
   node: TreeNode | null,
   language: string,
-  definitions: Map<string, GraphNode> = new Map()
-): Map<string, GraphNode> {
+  definitions: Map<string, NodeAttributes> = new Map()
+): Map<string, NodeAttributes> {
   if (!node) return definitions;
 
   // Language-specific patterns for definitions
@@ -73,7 +72,6 @@ function extractDefinitions(
     const id = `${node.type}:${name}`;
     if (!definitions.has(id)) {
       definitions.set(id, {
-        id,
         label: name,
         type: node.type,
         size: 10,
@@ -141,10 +139,13 @@ function extractReferences(
 }
 
 /**
- * Build a code relationship graph from source code
+ * Build a code relationship graph from source code using Graphology
  */
 export async function buildCodeGraph(code: string, language: string): Promise<CodeGraph> {
   try {
+    // Create a new directed graph
+    const graph = new Graph<NodeAttributes, EdgeAttributes>();
+
     // Parse code using TreeSitter
     const parseResult = await parseCode(code, language);
     const rootNode = parseResult.rootNode;
@@ -152,31 +153,26 @@ export async function buildCodeGraph(code: string, language: string): Promise<Co
     // Extract definitions (functions, classes, etc.)
     const definitions = extractDefinitions(rootNode, language);
 
+    // Add nodes to graph
+    definitions.forEach((attrs, nodeId) => {
+      graph.addNode(nodeId, attrs);
+    });
+
     // Extract references (calls, instantiations, etc.)
     const references = extractReferences(rootNode, language);
 
-    // Convert definitions to graph nodes
-    const nodes: GraphNode[] = Array.from(definitions.values());
+    // Add edges to graph
+    references.forEach((ref) => {
+      const targetId = `${ref.type}:${ref.callee}`;
+      if (definitions.has(targetId)) {
+        graph.addEdge(ref.caller, targetId, {
+          type: ref.type,
+          weight: 1,
+        });
+      }
+    });
 
-    // Create edges from references
-    const edges: GraphEdge[] = references
-      .filter((ref) => definitions.has(`${ref.type}:${ref.callee}`))
-      .map((ref) => ({
-        source: ref.caller,
-        target: `${ref.type}:${ref.callee}`,
-        type: ref.type,
-        weight: 1,
-      }));
-
-    return {
-      nodes,
-      edges,
-      metadata: {
-        language,
-        totalNodes: nodes.length,
-        totalEdges: edges.length,
-      },
-    };
+    return graph;
   } catch (error) {
     console.error('Error building code graph:', error);
     throw error;
@@ -186,7 +182,7 @@ export async function buildCodeGraph(code: string, language: string): Promise<Co
 /**
  * Assign colors to nodes based on type
  */
-export function colorizeNodes(nodes: GraphNode[]): GraphNode[] {
+export function colorizeGraph(graph: CodeGraph): void {
   const colorMap: Record<string, string> = {
     function_declaration: '#3b82f6',
     class_declaration: '#8b5cf6',
@@ -199,26 +195,54 @@ export function colorizeNodes(nodes: GraphNode[]): GraphNode[] {
     impl_item: '#f97316',
   };
 
-  return nodes.map((node) => ({
-    ...node,
-    color: colorMap[node.type] || '#6b7280',
-  }));
+  graph.forEachNode((_nodeId, attrs) => {
+    attrs.color = colorMap[attrs.type] || '#6b7280';
+  });
 }
 
 /**
  * Calculate node sizes based on degree (number of connections)
  */
-export function calculateNodeSizes(nodes: GraphNode[], edges: GraphEdge[]): GraphNode[] {
-  const degreeMap = new Map<string, number>();
+export function calculateNodeSizesInGraph(graph: CodeGraph): void {
+  graph.forEachNode((nodeId) => {
+    const degree = graph.degree(nodeId);
+    const attrs = graph.getNodeAttributes(nodeId);
+    attrs.size = Math.max(10, degree * 5 + 10);
+  });
+}
 
-  // Count connections for each node
-  edges.forEach((edge) => {
-    degreeMap.set(edge.source, (degreeMap.get(edge.source) || 0) + 1);
-    degreeMap.set(edge.target, (degreeMap.get(edge.target) || 0) + 1);
+/**
+ * Convert Graphology graph to D3-compatible data format
+ */
+export function graphToD3Data(graph: CodeGraph, language: string = 'unknown'): GraphData {
+  const nodes = graph.nodes().map((nodeId) => {
+    const attrs = graph.getNodeAttributes(nodeId);
+    return {
+      id: nodeId,
+      label: attrs.label,
+      type: attrs.type,
+      color: attrs.color,
+      size: attrs.size,
+    };
   });
 
-  return nodes.map((node) => ({
-    ...node,
-    size: Math.max(10, (degreeMap.get(node.id) || 0) * 5 + 10),
-  }));
+  const edges = graph.edges().map((edgeId) => {
+    const [source, target] = graph.extremities(edgeId);
+    const attrs = graph.getEdgeAttributes(edgeId);
+    return {
+      source,
+      target,
+      type: attrs.type,
+    };
+  });
+
+  return {
+    nodes,
+    edges,
+    metadata: {
+      language,
+      totalNodes: nodes.length,
+      totalEdges: edges.length,
+    },
+  };
 }

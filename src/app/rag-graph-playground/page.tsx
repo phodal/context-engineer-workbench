@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import GraphVisualization from '@/components/graph-search/GraphVisualization';
-import { buildCodeGraph, colorizeNodes, calculateNodeSizes, CodeGraph } from '@/lib/graph-builder';
+import D3GraphVisualization from '@/components/graph-search/D3GraphVisualization';
+import {
+  buildCodeGraph,
+  colorizeGraph,
+  calculateNodeSizesInGraph,
+  graphToD3Data,
+  GraphData,
+} from '@/lib/graph-builder';
 
 interface TokenCost {
   step: string;
@@ -73,7 +79,7 @@ function initializeSystem() {
 export default function RAGGraphPlaygroundPage() {
   const [code, setCode] = useState(EXAMPLE_CODE);
   const [language, setLanguage] = useState('javascript');
-  const [graph, setGraph] = useState<CodeGraph | null>(null);
+  const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [tokenCosts, setTokenCosts] = useState<TokenCost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,14 +94,16 @@ export default function RAGGraphPlaygroundPage() {
     setError(null);
 
     try {
-      // Build the graph
-      const builtGraph = await buildCodeGraph(code, language);
+      // Build the graph using Graphology
+      const graph = await buildCodeGraph(code, language);
 
       // Colorize and size nodes
-      builtGraph.nodes = colorizeNodes(builtGraph.nodes);
-      builtGraph.nodes = calculateNodeSizes(builtGraph.nodes, builtGraph.edges);
+      colorizeGraph(graph);
+      calculateNodeSizesInGraph(graph);
 
-      setGraph(builtGraph);
+      // Convert to D3 data format
+      const d3Data = graphToD3Data(graph, language);
+      setGraphData(d3Data);
 
       // Calculate token costs
       const costs: TokenCost[] = [
@@ -106,16 +114,16 @@ export default function RAGGraphPlaygroundPage() {
         },
         {
           step: 'Extract Definitions',
-          tokens: builtGraph.metadata.totalNodes * 10,
+          tokens: d3Data.metadata.totalNodes * 10,
           percentage: 0,
         },
         {
           step: 'Extract References',
-          tokens: builtGraph.metadata.totalEdges * 5,
+          tokens: d3Data.metadata.totalEdges * 5,
           percentage: 0,
         },
         {
-          step: 'Layout Calculation',
+          step: 'D3 Layout Calculation',
           tokens: 100,
           percentage: 0,
         },
@@ -251,27 +259,31 @@ export default function RAGGraphPlaygroundPage() {
           )}
 
           {/* Graph Visualization */}
-          <GraphVisualization graph={graph} isLoading={isLoading} />
+          <D3GraphVisualization data={graphData} isLoading={isLoading} />
 
           {/* Graph Statistics */}
-          {graph && (
+          {graphData && (
             <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
               <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 border-b border-slate-200">
                 <h2 className="text-lg font-bold text-slate-900">Graph Statistics</h2>
               </div>
               <div className="p-6 grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-600">{graph.metadata.totalNodes}</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {graphData.metadata.totalNodes}
+                  </p>
                   <p className="text-sm text-slate-600 mt-1">Nodes (Functions/Classes)</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-purple-600">{graph.metadata.totalEdges}</p>
+                  <p className="text-3xl font-bold text-purple-600">
+                    {graphData.metadata.totalEdges}
+                  </p>
                   <p className="text-sm text-slate-600 mt-1">Edges (Relationships)</p>
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-bold text-green-600">
-                    {graph.metadata.totalEdges > 0
-                      ? (graph.metadata.totalEdges / graph.metadata.totalNodes).toFixed(2)
+                    {graphData.metadata.totalEdges > 0
+                      ? (graphData.metadata.totalEdges / graphData.metadata.totalNodes).toFixed(2)
                       : '0'}
                   </p>
                   <p className="text-sm text-slate-600 mt-1">Avg Connections</p>
