@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import PageHeader from '@/components/layout/PageHeader';
 import D3GraphVisualization from '@/components/graph-search/D3GraphVisualization';
 import CodeEditor, { Highlight } from '@/components/treesitter/CodeEditor';
+import NodeInfoPanel from '@/components/graph-search/NodeInfoPanel';
 import {
   buildCodeGraph,
   colorizeGraph,
@@ -73,6 +74,14 @@ function initializeSystem() {
 }
 `;
 
+interface SelectedNode {
+  nodeId: string;
+  nodeLabel: string;
+  nodeType: string;
+  code: string;
+  metadata?: Record<string, unknown>;
+}
+
 export default function RAGGraphPlaygroundPage() {
   const [code, setCode] = useState(EXAMPLE_CODE);
   const [language, setLanguage] = useState('javascript');
@@ -80,6 +89,7 @@ export default function RAGGraphPlaygroundPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
 
   const handleBuildGraph = useCallback(async () => {
     if (!code.trim()) {
@@ -109,10 +119,38 @@ export default function RAGGraphPlaygroundPage() {
     }
   }, [code, language]);
 
-  const handleNodeSelect = useCallback((nodeId: string) => {
-    // Node selection is now handled by code highlighting
-    console.log(`Selected node: ${nodeId}`);
-  }, []);
+  const handleNodeSelect = useCallback(
+    (nodeId: string, metadata?: Record<string, unknown>) => {
+      if (!graphData) return;
+
+      // Find the node in graphData
+      const node = graphData.nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+
+      // Extract code for this node from the original code
+      let nodeCodeSnippet = '';
+      if (
+        metadata &&
+        typeof metadata.startLine === 'number' &&
+        typeof metadata.endLine === 'number'
+      ) {
+        const lines = code.split('\n');
+        nodeCodeSnippet = lines
+          .slice(metadata.startLine, (metadata.endLine as number) + 1)
+          .join('\n');
+      }
+
+      // Set selected node
+      setSelectedNode({
+        nodeId,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        code: nodeCodeSnippet || code,
+        metadata,
+      });
+    },
+    [code, graphData]
+  );
 
   const handleHighlightCode = useCallback(
     (label: string, metadata?: Record<string, unknown>) => {
@@ -177,7 +215,7 @@ export default function RAGGraphPlaygroundPage() {
 
       <div className="space-y-8">
         {/* Code Editor Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Code Editor */}
           <div className="lg:col-span-3">
             <div className="space-y-4">
@@ -233,8 +271,19 @@ export default function RAGGraphPlaygroundPage() {
             </div>
           </div>
 
-          {/* Graph Statistics Sidebar */}
-          {graphData && (
+          {/* Right Sidebar - Node Info or Statistics */}
+          {selectedNode ? (
+            <div className="lg:col-span-2 h-fit lg:h-screen lg:overflow-hidden">
+              <NodeInfoPanel
+                nodeId={selectedNode.nodeId}
+                nodeLabel={selectedNode.nodeLabel}
+                nodeType={selectedNode.nodeType}
+                code={selectedNode.code}
+                language={language}
+                onClose={() => setSelectedNode(null)}
+              />
+            </div>
+          ) : graphData ? (
             <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden h-fit">
               <div className="bg-linear-to-r from-green-50 to-green-100 px-6 py-4 border-b border-slate-200">
                 <h2 className="text-lg font-bold text-slate-900">Statistics</h2>
@@ -260,9 +309,12 @@ export default function RAGGraphPlaygroundPage() {
                   </p>
                   <p className="text-xs text-slate-600 mt-1">Avg Connections</p>
                 </div>
+                <div className="text-center text-xs text-slate-500 pt-4 border-t border-slate-200">
+                  <p>Click on a node to view documentation</p>
+                </div>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Debug Inspector */}
@@ -274,6 +326,15 @@ export default function RAGGraphPlaygroundPage() {
           isLoading={isLoading}
           onNodeSelect={handleNodeSelect}
           onHighlightCode={handleHighlightCode}
+          onNodeClick={(nodeId) => {
+            // Find node and trigger selection
+            if (graphData) {
+              const node = graphData.nodes.find((n) => n.id === nodeId);
+              if (node) {
+                handleNodeSelect(nodeId, node.metadata);
+              }
+            }
+          }}
         />
       </div>
     </AppLayout>
